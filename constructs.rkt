@@ -24,6 +24,7 @@
          mint-tag-uri
          tag-uri?
          tag-uri->string
+         append-specific
                   
          person
          (rename-out [human? person?])
@@ -191,6 +192,10 @@
 (define/contract (mint-tag-uri authority date specific)
   (-> dns-domain? tag-entity-date? tag-specific-string? tag-uri?)
   (tag-uri authority date specific))
+
+(define/contract (append-specific t suffix)
+  (-> tag-uri? tag-specific-string? tag-uri?)
+  (struct-copy tag-uri t [specific (string-append (tag-uri-specific t) "." suffix)]))
 
 (define/contract (tag-uri->string t #:specific [specific (tag-uri-specific t)])
   (->* (tag-uri?) (#:specific tag-specific-string?) string?)
