@@ -180,7 +180,7 @@
 (struct tag-uri (authority date specific)
   #:methods gen:custom-write
   [(define (write-proc t port mode)
-     (if mode (write-string "<tag-uri " port) (write-string "(tag-uri " port))
+     (if mode (write-string "#<tag-uri " port) (write-string "(tag-uri " port))
      ((case mode
         [(#t) write]
         [(#f) display]
