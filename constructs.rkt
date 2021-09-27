@@ -283,7 +283,7 @@
   (-> moment? (or/c 'rss 'atom) string?)
   (~t m (case type
           [(atom) "y-MM-dd'T'HH:mm:ssXXXXX"]
-          [(rss) "E, d MMM HH:mm:ss xxx"])))
+          [(rss) "E, d MMM y HH:mm:ss xx"])))
 
 ;; Flavors of RSS
 (define-explained-contract (rss-dialect? v)
