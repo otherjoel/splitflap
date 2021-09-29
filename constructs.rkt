@@ -298,15 +298,27 @@
   (->* (string? email-address?) ((or/c valid-url-string? #f)) human?)
   (human name email uri))
   
-(define/contract (person->xexpr p entity dialect)
-  (-> human? symbol? rss-dialect? txexpr?)
+(define/contract (person->xexpr p entity dialect #:elem-prefix [prefix #f])
+  (->* (human? symbol? rss-dialect?) (#:elem-prefix (or/c symbol? #f)) txexpr?)
+  (match-define (list name-tag email-tag uri-tag)
+    (cond [prefix (map (λ (s) (string->symbol (format "~a~a" prefix s))) '(name email uri))]
+          [else '(name email uri)]))
   (case dialect
     [(atom)
-     (define uri (if (human-uri p) `((uri ,(human-uri p))) `()))
-     (txexpr entity '() `((name ,(human-name p))
-                          (email ,(human-email p))
+     (define uri (if (human-uri p) `((,uri-tag ,(human-uri p))) `()))
+     (txexpr entity '() `((,name-tag ,(human-name p))
+                          (,email-tag ,(human-email p))
                           ,@uri))]
     [(rss)
      (txexpr entity '() (list (format "~a (~a)" (human-email p) (human-name p))))]))
   
-  
+(module+ test
+  (define joel (person "Joel" "joel@msn.com"))
+  (check-true (human? joel))
+  (check-equal? (person->xexpr joel 'author 'rss) '(author "joel@msn.com (Joel)"))
+  (check-equal? (person->xexpr joel 'author 'atom) '(author (name "Joel") (email "joel@msn.com")))
+
+  ;; Prefixing child elements
+  (check-equal? (person->xexpr joel 'owner 'rss #:elem-prefix 'itunes:) '(owner "joel@msn.com (Joel)"))
+  (check-equal? (person->xexpr joel 'itunes:owner 'atom #:elem-prefix 'itunes:)
+               '(itunes:owner (itunes:name "Joel") (itunes:email "joel@msn.com"))))
