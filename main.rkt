@@ -53,20 +53,27 @@
   (case result-type
     [(xexpr xexpr-cdata) entry-xpr]
     [(xml) (xexpr->xml entry-xpr)]
-    [(xml-string) (display-xml-to-string (xexpr->xml entry-xpr))]))
+    [(xml-string) (feed-xml-string (xexpr->xml entry-xpr))]))
 
 (struct feed
   (id site-url name entries)
   #:guard (struct-guard/c tag-uri? valid-url-string? xexpr? (listof feed-entry?)))
 
-(define (display-xml-to-string x)
+(define (feed-xml-string x)
+  (define display-proc (if (document? x) display-xml display-xml/content))
   (with-output-to-string
     (λ ()
       (parameterize ([empty-tag-shorthand (cons 'atom:link html-empty-tags)])
-        (display-xml/content x #:indentation 'peek)))))
+        (display-proc x #:indentation 'peek)))))
+
+(define (xml-document xpr)
+  (document
+   (prolog (list (p-i 'racket 'racket 'xml "version=\"1.0\" encoding=\"UTF-8\"")) #f '())
+   (xexpr->xml xpr)
+   '()))
 
 (define/contract (feed-output f feed-url dialect #:result-type [result-type 'xml-string])
-  (->* (feed? valid-url-string? rss-dialect?) (#:result-type (or/c 'xml-string 'xml 'xexpr)) (or/c string? content/c txexpr?))
+  (->* (feed? valid-url-string? rss-dialect?) (#:result-type (or/c 'xml-string 'xml 'xexpr)) (or/c string? document? txexpr?))
   (define entries-sorted (sort (feed-entries f) entry-newer?))
   (match-define (feed feed-id site-url feed-name _) f)
   (define gen (format "Racket v~a [~a] (https://racket-lang.org)" (version) (system-type 'gc)))
@@ -99,5 +106,5 @@
                   (entry-output e 'atom #:result-type (if xml? 'xexpr-cdata 'xexpr)))))]))
   (case result-type
     [(xexpr) feed-xpr]
-    [(xml) (xexpr->xml feed-xpr)]
-    [(xml-string) (display-xml-to-string (xexpr->xml feed-xpr))]))
+    [(xml) (xml-document feed-xpr)]
+    [(xml-string) (feed-xml-string (xml-document feed-xpr))]))
