@@ -1,9 +1,10 @@
 #lang racket/base
 
 ;;
-;; Predicates and constructors for Dates, Persons, Tag URIs, URLs and Email addresses
+;; Predicates and constructors for Dates, Persons, Tag URIs, URLs, email addresses and enclosures
 
 (require (for-syntax racket/base)
+         "private/xml-generic.rkt"
          gregor
          net/url-string
          racket/contract
@@ -33,7 +34,10 @@
          person->xexpr
 
          infer-moment
-         moment->string)
+         moment->string
+
+         (struct-out enclosure)
+         file->enclosure)
 
 ;; (private) convenience macro
 (define-syntax (define-explained-contract stx)
@@ -325,7 +329,7 @@
   ;; Prefixing child elements
   (check-equal? (person->xexpr joel 'owner 'rss #:elem-prefix 'itunes:) '(owner "joel@msn.com (Joel)"))
   (check-equal? (person->xexpr joel 'itunes:owner 'atom #:elem-prefix 'itunes:)
-               '(itunes:owner (itunes:name "Joel") (itunes:email "joel@msn.com"))))
+                '(itunes:owner (itunes:name "Joel") (itunes:email "joel@msn.com"))))
 
 ;; ~~ MIME types ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -340,20 +344,85 @@
 (define path->mime-type
   (make-path->mime-type mime.types-path))
 
-;; Return a MIME type for a file extension in a form meant for splicing into a list of attributes.
+;; Return a MIME type for a given file extension.
 ;; MIME types are not required; if unknown, the type should not be specified.
-(define (ext->mime-type-attr ext)
+(define (ext->mime-type ext)
   (match (path->mime-type (string->path ext))
-    [(? bytes? b) `(type ,(bytes->string/utf-8 b))]
-    [_ '()]))
+    [(? bytes? b) (bytes->string/utf-8 b)]
+    [_ #f]))
 
 (module+ test
   ;; Check some common types
-  (check-equal? (ext->mime-type-attr ".mp3") '(type "audio/mpeg"))
-  (check-equal? (ext->mime-type-attr ".m4a") '(type "audio/x-m4a"))
-  (check-equal? (ext->mime-type-attr ".mpg") '(type "video/mpeg"))
-  (check-equal? (ext->mime-type-attr ".mp4") '(type "video/mp4"))
+  (check-equal? (ext->mime-type ".mp3") "audio/mpeg")
+  (check-equal? (ext->mime-type ".m4a") "audio/x-m4a")
+  (check-equal? (ext->mime-type ".mpg") "video/mpeg")
+  (check-equal? (ext->mime-type ".mp4") "video/mp4")
 
   ;; Empty list returned for unknown extensions
-  (check-equal? (ext->mime-type-attr ".asdahsf") '()))
+  (check-equal? (ext->mime-type ".asdahsf") #f))
+
+;; ~~ Enclosures ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+(struct enclosure (url type size)
+  #:guard (struct-guard/c valid-url-string? (or/c non-empty-string? #f) exact-nonnegative-integer?)
+  #:methods gen:feed-data
+  [(define/contract (express-xml e dialect _url #:as [r 'xexpr])
+     (->* (any/c rss-dialect? any/c) (#:as symbol?) xexpr?)
+     (match-define (enclosure url type size) e)
+     (case dialect
+       [(atom)
+        `(link [[rel "enclosure"]
+                ,@(if type `((type ,type)) '())
+                [length ,(number->string size)]
+                [href ,url]])]
+       [(rss)
+        `(enclosure [[url ,url]
+                     [length ,(number->string size)]
+                     ,@(if type `((type ,type)) '())])]))])
+
+(module+ test
+  (require racket/file)
+  (check-exn exn:fail:contract? (λ () (enclosure "invalid-url" "audio/x-m4a" 1234)))
+  (check-exn exn:fail:contract? (λ () (enclosure "http://d.com/f.e" -900 1234)))
+  (check-exn exn:fail:contract? (λ () (enclosure "http://d.com/f.e" "audio/x-m4a" -1)))
+
+  (define test-enc
+    (enclosure "gopher://umn.edu/greeting.m4a" "audio/x-m4a" 1234))
+
+  (check-txexprs-equal?
+   (express-xml test-enc 'atom #f)
+   '(link [[rel "enclosure"]
+           [href "gopher://umn.edu/greeting.m4a"]
+           [length "1234"]
+           [type "audio/x-m4a"]]))
   
+  (check-txexprs-equal?
+   (express-xml test-enc 'rss #f)
+   '(enclosure [[url "gopher://umn.edu/greeting.m4a"]
+                [length "1234"]
+                [type "audio/x-m4a"]]))
+
+  ;; Enclosure with unknown type
+  (define test-enc2
+    (enclosure "gopher://umn.edu/greeting.m4a" #f 1234))
+  
+  (check-txexprs-equal?
+   (express-xml test-enc2 'atom #f)
+   '(link [[rel "enclosure"]
+           [href "gopher://umn.edu/greeting.m4a"]
+           [length "1234"]]))
+  
+  (check-txexprs-equal?
+   (express-xml test-enc2 'rss #f)
+   '(enclosure [[url "gopher://umn.edu/greeting.m4a"]
+                [length "1234"]])))
+
+;; Convenient way to make an enclosure if you have an existing file
+(define/contract (file->enclosure file-path base-url)
+  (-> path-string? valid-url-string? enclosure?)
+  (unless (eq? 'file (file-or-directory-type file-path))
+    (raise-argument-error 'file->enclosure "path to an existing file" file-path))
+  (define filename (car (reverse (explode-path file-path))))
+  (enclosure (path->string (build-path (string->path base-url) filename))
+             (ext->mime-type (path->string filename))
+             (file-size file-path)))
