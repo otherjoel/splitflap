@@ -1,5 +1,7 @@
 #lang racket/base
 
+;; ~~ RSS Feed Generation ~~~~~~~~~~~~~~~~~~~~~~~~
+
 (require "constructs.rkt"
          "private/dust.rkt"
          "private/xml-generic.rkt"
@@ -8,7 +10,6 @@
          racket/contract
          racket/generic
          racket/match
-         racket/port
          xml)
 
 (struct feed-entry
@@ -22,7 +23,7 @@
            moment?
            xexpr?)
   
-  #:methods gen:xml-source
+  #:methods gen:feed-data
   [(define/contract (express-xml e dialect url #:as [result-type 'xml-string])
      (->* (any/c rss-dialect? any/c) (#:as xml-type/c) any/c)
      
@@ -92,7 +93,7 @@ ATOM
   (id site-url name entries)
   #:guard (struct-guard/c tag-uri? valid-url-string? xexpr? (listof feed-entry?))
 
-  #:methods gen:xml-source
+  #:methods gen:feed-data
   [(define/generic super-express-xml express-xml)
    (define/contract (express-xml f dialect feed-url #:as [result-type 'xml-string])
      (->* (any/c rss-dialect? valid-url-string?) (#:as xml-type/c) (or/c string? document? txexpr?))
@@ -132,6 +133,8 @@ ATOM
        [(xml-string) (indented-xml-string feed-xpr #:document? #t)]))])
 
 (module+ test
+  (check-exn exn:fail:contract? (λ () (feed site-id "not a url" "Title" (list e1))))
+  
   (define f1 (feed site-id "https://example.com/" "Kate Poster Posts" (list e1)))
   (define expect-feed-atom #<<ATOMFEED
 <?xml version="1.0" encoding="UTF-8"?>
