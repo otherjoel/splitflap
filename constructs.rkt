@@ -47,7 +47,8 @@
                  (raise-blame-error blame VAL '(expected: EXPECTED given: "~e") VAL))]))
           #:name 'NAME))]))
 
-;; RFC 1035
+;; ~~ DNS Domain validation (RFC 1035) ~~~~~~~~~~~
+;;
 ;;  <domain> ::= <subdomain> | " "
 ;;  <subdomain> ::= <label> | <subdomain> "." <label>
 ;;  <label> ::= <letter> [ [ <ldh-str> ] <let-dig> ]
@@ -111,6 +112,8 @@
   (check-false (dns-domain? (string-append longest-valid-label "a")))
   (check-false (dns-domain? (string-append longest-valid-domain "a"))))
 
+;; ~~ URL Validation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 ;; This library counts a URL as “valid” only if it includes a valid scheme
 ;; AND the host is a valid RFC 1035 domain.
 (define-explained-contract (valid-url-string? val)
@@ -137,7 +140,8 @@
   (check-false (valid-url-string? "ldap://[2001:db8::7]/c=GB?objectClass?one"))
   (check-false (valid-url-string? "telnet://192.0.2.16:80/")))
 
-;; RFC 4151
+;; ~~ Tag URIs (RFC 4151) ~~~~~~~~~~~~~~~~~~~~~~~~
+;;
 ;; The general syntax of a tag URI, in ABNF [2], is:
 ;;
 ;;      tagURI = "tag:" taggingEntity ":" specific [ "#" fragment ]
@@ -157,13 +161,13 @@
 ;;      specific = *( pchar / "/" / "?" ) ; pchar from RFC 3986 [1]
 ;;      fragment = *( pchar / "/" / "?" ) ; same as RFC 3986 [1]
 ;;
-;; RFC 3986
+;; RFC 3986:
 ;;  pchar         = unreserved / pct-encoded / sub-delims / ":" / "@"
 ;;  unreserved    = ALPHA / DIGIT / "-" / "." / "_" / "~"
 ;;  sub-delims    = "!" / "$" / "&" / "'" / "(" / ")"
 ;;                   / "*" / "+" / "," / ";" / "="
 ;;
-;; RFC 2234
+;; RFC 2234:
 ;;  ALPHA          =  %x41-5A / %x61-7A   ; A-Z / a-z
 ;;  DIGIT          =  %x30-39             ; 0-9
 
@@ -201,10 +205,8 @@
   (->* (tag-uri?) (#:specific tag-specific-string?) string?)
   (format "tag:~a,~a:~a" (tag-uri-authority t) (tag-uri-date t) specific))
 
-;;
-;; Email
-;;
-;; This library uses RFC 5322
+;; ~~ Email address validation (subset of RFC5322) ~~~~~~~~~
+
 (define-explained-contract (email-address? str)
   "a valid RFC 5322 email address"      
   (and (string? str)
@@ -244,7 +246,8 @@
                  str))
   str)
 
-;; Here’s a nearly-complete Regex for RFC5322. Not using it because it allows for things that 
+;; Here’s a nearly-complete Regex for RFC5322. Not using it because it allows
+;; for things that many/most email services & clients don’t actually support.
 ;; #px"^(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\\[\\]-\x7f]|\\\\[\x01-\x09\x0b\x0c\x0e-\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\\])$" str)))
 
 (module+ test
@@ -265,8 +268,7 @@
   (check-false (email-address? "email@123.123.123.123"))
   (check-false (email-address? "email@[123.123.123.123]")))
 
-;;
-;; Dates
+;; ~~ Dates ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 (define (n: v) (cond [(not v) 0] [(string? v) (string->number v)] [else v]))
 
@@ -285,13 +287,13 @@
           [(atom) "y-MM-dd'T'HH:mm:ssXXXXX"]
           [(rss) "E, d MMM y HH:mm:ss xx"])))
 
-;; Flavors of RSS
+;; ~~ Flavors of RSS: 'rss or 'atom ~~~~~~~~~~~~~~
 (define-explained-contract (rss-dialect? v)
   "A symbol representing a valid RSS dialect: 'rss or 'atom"
   (or (eq? v 'rss) (eq? v 'atom)))
 
-;;
-;; Persons
+;; ~~ Persons ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 (struct human (name email uri))
 
 (define/contract (person name email [uri #f])
