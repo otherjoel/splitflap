@@ -5,11 +5,13 @@
 
 (require (for-syntax racket/base)
          gregor
+         net/url-string
          racket/contract
          racket/match
+         racket/runtime-path
          racket/string
          txexpr
-         net/url-string)
+         web-server/private/mime-types)
 
 ;; Interfaces
 
@@ -324,3 +326,34 @@
   (check-equal? (person->xexpr joel 'owner 'rss #:elem-prefix 'itunes:) '(owner "joel@msn.com (Joel)"))
   (check-equal? (person->xexpr joel 'itunes:owner 'atom #:elem-prefix 'itunes:)
                '(itunes:owner (itunes:name "Joel") (itunes:email "joel@msn.com"))))
+
+;; ~~ MIME types ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+;; This code is adapted from koyo/mime by Bogdan Popa.
+;; (Simply to avoid having a large dependency just for MIME typing)
+;; https://github.com/Bogdanp/koyo/blob/a1ce05497e72357c03b868d3aa3b9b40f462227c/koyo-lib/koyo/mime.rkt
+;; Licensed under the 3-clause BSD License.
+
+(define-runtime-path mime.types-path
+  (build-path "private/mime.types"))
+
+(define path->mime-type
+  (make-path->mime-type mime.types-path))
+
+;; Return a MIME type for a file extension in a form meant for splicing into a list of attributes.
+;; MIME types are not required; if unknown, the type should not be specified.
+(define (ext->mime-type-attr ext)
+  (match (path->mime-type (string->path ext))
+    [(? bytes? b) `(type ,(bytes->string/utf-8 b))]
+    [_ '()]))
+
+(module+ test
+  ;; Check some common types
+  (check-equal? (ext->mime-type-attr ".mp3") '(type "audio/mpeg"))
+  (check-equal? (ext->mime-type-attr ".m4a") '(type "audio/x-m4a"))
+  (check-equal? (ext->mime-type-attr ".mpg") '(type "video/mpeg"))
+  (check-equal? (ext->mime-type-attr ".mp4") '(type "video/mp4"))
+
+  ;; Empty list returned for unknown extensions
+  (check-equal? (ext->mime-type-attr ".asdahsf") '()))
+  
