@@ -12,11 +12,22 @@
 
 ;; ~~ XML Utility functions ~~~~~~~~~~~~~~~~~~~~~~
 
-;; Quick CDATA creation
+;; Create CDATA from a string or txexpr and undo any entity escaping in the result.
 (define (as-cdata v)
-  (cdata #f #f (format "<![CDATA[~a]]>"
-                       (cond [(txexpr? v) (xexpr->string v)]
-                             [else v]))))
+  (define entities (hash "&amp;" "&" "&lt;" "<" "&gt;" ">"))
+  (define cdata-str
+    (cond [(txexpr? v)
+           (regexp-replace* #rx"&amp;|&lt;|&gt;" (xexpr->string v) (lambda (e) (hash-ref entities e)))]
+          [else v]))
+  (cdata 'racket 'racket (format "<![CDATA[~a]]>" cdata-str)))
+
+(module+ test
+  ;; String input: no escaping in result
+  (check-equal? (as-cdata "Hi & < >")
+                (cdata 'racket 'racket "<![CDATA[Hi & < >]]>"))
+  ;; Txexpr input: no escaping in result
+  (check-equal? (as-cdata '(div (p "Hi & < >")))
+                (cdata 'racket 'racket "<![CDATA[<div><p>Hi & < ></p></div>]]>")))
 
 ;; Convert an x-expression to a complete XML document
 (define (xml-document xpr)

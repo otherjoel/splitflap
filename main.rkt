@@ -64,7 +64,7 @@
                   (person "Kate Poster" "kate@example.com")
                   (infer-moment "2007-03-17")
                   (infer-moment "2007-03-17")
-                  "Hi!")))
+                  `(div (p "Welcome to my blog.") (ul (li "& ' < > ' \" © ℗ ™"))))))
 
   (define expect-atom #<<ATOM
 <entry>
@@ -78,12 +78,11 @@
   <updated>2007-03-17T00:00:00Z</updated>
   <published>2007-03-17T00:00:00Z</published>
   <content>
-    <![CDATA[Hi!]]>
+    <![CDATA[<div><p>Welcome to my blog.</p><ul><li>& ' < > ' " © ℗ ™</li></ul></div>]]>
   </content>
 </entry>
 ATOM
     )
-
   (check-equal? (express-xml e1 'atom #f) expect-atom))
 
 (define (entry-newer? maybe-newer other)
@@ -156,7 +155,7 @@ ATOM
     <updated>2007-03-17T00:00:00Z</updated>
     <published>2007-03-17T00:00:00Z</published>
     <content>
-      <![CDATA[Hi!]]>
+      <![CDATA[<div><p>Welcome to my blog.</p><ul><li>& ' < > ' " © ℗ ™</li></ul></div>]]>
     </content>
   </entry>
 </feed>
@@ -180,14 +179,13 @@ ATOMFEED
       <guid isPermaLink="false">tag:example.com,2007:blog.one</guid>
       <pubDate>Sat, 17 Mar 2007 00:00:00 +0000</pubDate>
       <description>
-        <![CDATA[Hi!]]>
+        <![CDATA[<div><p>Welcome to my blog.</p><ul><li>& ' < > ' " © ℗ ™</li></ul></div>]]>
       </description>
     </item>
   </channel>
 </rss>
 RSSFEED
     )
-    
    (parameterize ([include-generator? #f])
      (check-equal? (express-xml f1 'atom "https://example.com/feed.atom") expect-feed-atom)
      (check-equal? (express-xml f1 'rss "https://example.com/feed.rss") expect-feed-rss))
