@@ -111,7 +111,7 @@
   (define xml-str
     (with-output-to-string
       (λ ()
-        (parameterize ([empty-tag-shorthand (cons 'atom:link html-empty-tags)])
+        (parameterize ([empty-tag-shorthand 'always])
           (display-proc x #:indentation 'peek)))))
   (string-trim (post-escape-entities xml-str) #:right? #f))
 
