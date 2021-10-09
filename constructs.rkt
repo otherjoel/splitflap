@@ -366,7 +366,7 @@
 
 (struct enclosure (url type size)
   #:guard (struct-guard/c valid-url-string? (or/c non-empty-string? #f) exact-nonnegative-integer?)
-  #:methods gen:feed-data
+  #:methods gen:food
   [(define/contract (express-xml e dialect _url #:as [r 'xexpr])
      (->* (any/c rss-dialect? any/c) (#:as symbol?) xexpr?)
      (match-define (enclosure url type size) e)

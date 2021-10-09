@@ -12,18 +12,20 @@
          racket/match
          xml)
 
-(provide (rename-out [make-feed-entry feed-entry]
+(provide food?
+         (rename-out [make-feed-entry feed-entry]
                      [make-episode episode])
          feed-entry?
          episode?
          feed
          feed?
+         podcast?
          express-xml)
 
 (struct feed-entry
   (id url title author published updated content media)
   #:constructor-name feed-entry_
-  #:methods gen:feed-data
+  #:methods gen:food
   [(define/generic <-express-xml express-xml)
    (define/contract (express-xml e dialect url #:as [result-type 'xml-string])
      (->* (any/c rss-dialect? any/c) (#:as xml-type/c) any/c)
@@ -103,7 +105,7 @@ ATOM
   (id site-url name entries)
   #:guard (struct-guard/c tag-uri? valid-url-string? xexpr? (listof feed-entry?))
 
-  #:methods gen:feed-data
+  #:methods gen:food
   [(define/generic <-express-xml express-xml)
    (define/contract (express-xml f dialect feed-url #:as [result-type 'xml-string])
      (->* (any/c rss-dialect? valid-url-string?) (#:as xml-type/c) (or/c string? document? txexpr?))
@@ -208,7 +210,7 @@ RSSFEED
 
 (struct episode feed-entry (duration image-url explicit? episode-n season-n type block?)
   #:constructor-name episode_
-  #:methods gen:feed-data
+  #:methods gen:food
   [(define/generic <-express-xml express-xml)
    (define/contract (express-xml ep dialect feed-url #:as [result-type 'xml-string])
      (->* (any/c rss-dialect? any/c) (#:as xml-type/c) any/c)
