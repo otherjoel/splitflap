@@ -118,6 +118,70 @@
   (check-false (dns-domain? (string-append longest-valid-label "a")))
   (check-false (dns-domain? (string-append longest-valid-domain "a"))))
 
+
+;; ~~ Email address validation (subset of RFC5322) ~~~~~~~~~
+
+(define-explained-contract (email-address? str)
+  "a valid RFC 5322 email address"      
+  (and (string? str)
+       (< (string-length str) 255) ; SMTP can handle a max of 254 characters
+       (let-values
+           ([(local-part domain)
+             (match (string-split str "@")
+               [(list loc dom) (values loc dom)]
+               [_ (values #f #f)])])
+         (and local-part
+              (< (string-length local-part) 65)
+              (dns-domain? domain)
+              (regexp-match? #px"[a-z0-9!#$%&'*+/=?^_‘{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_‘{|}~-]+)*" local-part)))))
+
+(define (email-error noun has-problem bad str)
+  (raise-arguments-error 'validate-email-address (format "~a ~a" noun has-problem) noun bad "in" str))
+
+(define (validate-email-address str)
+  (unless (string? str) (raise-argument-error 'validate-email "string" str))
+  (unless (< (string-length str) 255)
+    (raise-argument-error 'validate-email "string no more than 254 bytes in length" str))
+  (unless (string-contains? str "@") (email-error "address" "must contain @ sign" str str))
+  (unless (not (regexp-match? #rx"@[^@]*@" str)) (email-error "address" "must not contain more than one @ sign" str str))
+  (unless (not (regexp-match? #rx"@$" str)) (email-error "domain" "is missing" "" str))
+  (unless (not (regexp-match? #rx"^@" str)) (email-error "local-part" "is missing" "" str))
+
+  (match-define (list local-part domain) (string-split str "@"))
+  (unless (< (string-length local-part) 65)
+    (email-error "local part" "must be no longer than 64 bytes" local-part str))
+  (unless (dns-domain? domain)
+    (email-error "domain" "must be a valid RFC 1035 domain name" domain str))
+  (unless (not (regexp-match? #rx"^\\." local-part))
+    (email-error "local part" "must not start with a period" local-part str))
+  (unless (regexp-match #rx"^[\\.a-z0-9!#$%&'*+/=?^_‘{|}~-]+$" local-part)
+    (email-error "local part" "may only include a–z, A–Z, 0–9, or !#$%&'*+/=?^_‘{|}~-."
+                 local-part
+                 str))
+  str)
+
+;; Here’s a nearly-complete Regex for RFC5322. Not using it because it allows
+;; for things that many/most email services & clients don’t actually support.
+;; #px"^(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\\[\\]-\x7f]|\\\\[\x01-\x09\x0b\x0c\x0e-\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\\])$" str)))
+
+(module+ test
+  (check-true (email-address? "test@domain.com"))
+  (check-true (email-address? "test-email.with+symbol@domain.com"))
+  (check-true (email-address? "id-with-dash@domain.com"))
+  (check-true (email-address? "_______@example.com"))
+  (check-true (email-address? "#!$%&'*+-/=?^_{}|~@domain.org"))
+  (check-true (email-address? "\"email\"@example.com"))
+
+  ;; See also the tests for dns-domain? which apply to everything after the @
+  (check-false (email-address? "email"))
+  (check-false (email-address? "email@"))
+  (check-false (email-address? "@domain.com"))
+  (check-false (email-address? "@"))
+  (check-false (email-address? ""))
+  (check-false (email-address? (string-append "test@" longest-valid-domain)))
+  (check-false (email-address? "email@123.123.123.123"))
+  (check-false (email-address? "email@[123.123.123.123]")))
+
 ;; ~~ URL Validation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ;; This library counts a URL as “valid” only if it includes a valid scheme
@@ -200,7 +264,7 @@
      (if mode (write-string ">" port) (write-string ")" port)))])
 
 (define/contract (mint-tag-uri authority date specific)
-  (-> dns-domain? tag-entity-date? tag-specific-string? tag-uri?)
+  (-> (or/c dns-domain? email-address?) tag-entity-date? tag-specific-string? tag-uri?)
   (tag-uri authority date specific))
 
 (define/contract (append-specific t suffix)
@@ -210,69 +274,6 @@
 (define/contract (tag-uri->string t #:specific [specific (tag-uri-specific t)])
   (->* (tag-uri?) (#:specific tag-specific-string?) string?)
   (format "tag:~a,~a:~a" (tag-uri-authority t) (tag-uri-date t) specific))
-
-;; ~~ Email address validation (subset of RFC5322) ~~~~~~~~~
-
-(define-explained-contract (email-address? str)
-  "a valid RFC 5322 email address"      
-  (and (string? str)
-       (< (string-length str) 255) ; SMTP can handle a max of 254 characters
-       (let-values
-           ([(local-part domain)
-             (match (string-split str "@")
-               [(list loc dom) (values loc dom)]
-               [_ (values #f #f)])])
-         (and local-part
-              (< (string-length local-part) 65)
-              (dns-domain? domain)
-              (regexp-match? #px"[a-z0-9!#$%&'*+/=?^_‘{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_‘{|}~-]+)*" local-part)))))
-
-(define (email-error noun has-problem bad str)
-  (raise-arguments-error 'validate-email-address (format "~a ~a" noun has-problem) noun bad "in" str))
-
-(define (validate-email-address str)
-  (unless (string? str) (raise-argument-error 'validate-email "string" str))
-  (unless (< (string-length str) 255)
-    (raise-argument-error 'validate-email "string no more than 254 bytes in length" str))
-  (unless (string-contains? str "@") (email-error "address" "must contain @ sign" str str))
-  (unless (not (regexp-match? #rx"@[^@]*@" str)) (email-error "address" "must not contain more than one @ sign" str str))
-  (unless (not (regexp-match? #rx"@$" str)) (email-error "domain" "is missing" "" str))
-  (unless (not (regexp-match? #rx"^@" str)) (email-error "local-part" "is missing" "" str))
-
-  (match-define (list local-part domain) (string-split str "@"))
-  (unless (< (string-length local-part) 65)
-    (email-error "local part" "must be no longer than 64 bytes" local-part str))
-  (unless (dns-domain? domain)
-    (email-error "domain" "must be a valid RFC 1035 domain name" domain str))
-  (unless (not (regexp-match? #rx"^\\." local-part))
-    (email-error "local part" "must not start with a period" local-part str))
-  (unless (regexp-match #rx"^[\\.a-z0-9!#$%&'*+/=?^_‘{|}~-]+$" local-part)
-    (email-error "local part" "may only include a–z, A–Z, 0–9, or !#$%&'*+/=?^_‘{|}~-."
-                 local-part
-                 str))
-  str)
-
-;; Here’s a nearly-complete Regex for RFC5322. Not using it because it allows
-;; for things that many/most email services & clients don’t actually support.
-;; #px"^(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\\[\\]-\x7f]|\\\\[\x01-\x09\x0b\x0c\x0e-\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\\])$" str)))
-
-(module+ test
-  (check-true (email-address? "test@domain.com"))
-  (check-true (email-address? "test-email.with+symbol@domain.com"))
-  (check-true (email-address? "id-with-dash@domain.com"))
-  (check-true (email-address? "_______@example.com"))
-  (check-true (email-address? "#!$%&'*+-/=?^_{}|~@domain.org"))
-  (check-true (email-address? "\"email\"@example.com"))
-
-  ;; See also the tests for dns-domain? which apply to everything after the @
-  (check-false (email-address? "email"))
-  (check-false (email-address? "email@"))
-  (check-false (email-address? "@domain.com"))
-  (check-false (email-address? "@"))
-  (check-false (email-address? ""))
-  (check-false (email-address? (string-append "test@" longest-valid-domain)))
-  (check-false (email-address? "email@123.123.123.123"))
-  (check-false (email-address? "email@[123.123.123.123]")))
 
 ;; ~~ Dates ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
