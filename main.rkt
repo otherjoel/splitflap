@@ -88,7 +88,7 @@
          [(atom)
           `(feed [[xmlns "http://www.w3.org/2005/Atom"]]
                  (title ,feed-name)
-                 ,@(if/sp (include-generator?) (list (generator 'atom)))
+                 ,@(if/sp (include-generator?) (generator 'atom))
                  (id ,(tag-uri->string feed-id))
                  (link [[rel "self"] [href ,feed-url]])
                  (link [[rel "alternate"] [href ,site-url]])
@@ -99,7 +99,7 @@
           `(rss [[version "2.0"] [xmlns:atom "http://www.w3.org/2005/Atom"]]
                 (channel
                  (title ,feed-name)
-                 ,@(if/sp (include-generator?) (list (generator 'rss)))
+                 ,@(if/sp (include-generator?) (generator 'rss))
                  (description ,feed-name)
                  (atom:link [[rel "self"] [href ,feed-url] [type "application/rss+xml"]])
                  (link ,site-url)
@@ -123,12 +123,12 @@
      (define to-xml? (memq result-type '(xml xml-string xexpr-cdata)))
      (match-define
        (episode id url title author published updated content media
-                duration image-url explicit? episode-n season-n type block?) ep)
+                duration image-url explicit? episode-n season-n ep-type block?) ep)
      (define episode-xpr
        `(item
          (title ,title)
          ,(person->xexpr author 'author 'rss)
-         ,@(if/sp type `(itunes:episodeType ,(symbol->string type)))
+         ,@(if/sp ep-type `(itunes:episodeType ,(symbol->string ep-type)))
          (link ,url)
          (guid [[isPermaLink "false"]] ,(tag-uri->string id))
          ,@(if/sp media (<-express-xml media 'rss #f))
@@ -166,18 +166,68 @@
   (episode_ id url title author published updated content media
             duration image-url explicit? episode-n season-n type block?))
 
-(struct podcast feed (category image-url explicit? type block? complete? new-feed-url)
-  #:constructor-name podcast_)
+(struct podcast feed (category image-url owner explicit? type block? complete? new-feed-url)
+  #:constructor-name podcast_
+  #:methods gen:food
+  [(define/generic <-express-xml express-xml)
+   (define/contract (express-xml p dialect feed-url #:as [result-type 'xml-string])
+     (->* (any/c rss-dialect? valid-url-string?) (#:as xml-type/c) (or/c string? document? txexpr?))
 
-(define/contract (make-podcast id site-url name entries category image-url explicit?
+     (match-define (podcast feed-id site-url feed-name episodes cat image-url owner explicit? type block? complete? new-feed-url) p)
+     (define episodes-sorted (sort episodes entry-newer?))
+     (define category
+       (match cat
+         [(list cat1 cat2)
+          `(itunes:category [[text ,cat1]]
+                            (itunes:category [[text ,cat2]]))]
+         [(? string? c) `(itunes:category [[text ,c]])]))
+     (define last-updated (feed-entry-updated (car episodes-sorted)))
+     (define to-xml? (memq result-type '(xml xml-string)))
+
+     (define feed-xpr
+       `(rss [[version "2.0"]
+              [xmlns:atom "http://www.w3.org/2005/Atom"]
+              [xmlns:itunes "http://www.itunes.com/dtds/podcast-1.0.dtd"]]
+             (channel
+              (title ,feed-name)
+              ,@(if/sp (include-generator?) (generator 'rss))
+              (description ,feed-name)
+              (language "en-US")
+              (atom:link [[rel "self"] [href ,feed-url] [type "application/rss+xml"]])
+              (link ,site-url)
+              ,(person->xexpr owner 'itunes:owner 'atom #:elem-prefix 'itunes:)
+              (itunes:image [[href ,image-url]])
+              (itunes:explicit ,(if explicit? "yes" "no"))
+              ,@(if/sp type `(itunes:type ,(symbol->string type)))
+              ,@(if/sp block? '(itunes:block "Yes"))
+              ,@(if/sp complete? '(itunes:complete "Yes"))
+              ,@(if/sp new-feed-url `(itunes:new-feed-url ,new-feed-url))
+              (pubDate ,(moment->string last-updated 'rss))
+              (lastBuildDate ,(moment->string last-updated 'rss))
+              ,category
+              ,@(for/list ([e (in-list episodes-sorted)])
+                  (<-express-xml e 'rss #f #:as (if to-xml? 'xexpr-cdata 'xexpr))))))
+     (case result-type
+       [(xexpr xexpr-cdata) feed-xpr]
+       [(xml) (xml-document feed-xpr)]
+       [(xml-string) (indented-xml-string feed-xpr #:document? #t)]))])
+
+(define/contract (make-podcast id site-url name entries category image-url owner explicit?
                                #:type [type #f]
                                #:block? [block? #f]
                                #:complete? [complete? #f]
                                #:new-feed-url [new-feed-url #f])
-  (->* (tag-uri? valid-url-string? xexpr? (listof feed-entry?) (or/c string? (listof string?)) valid-url-string? boolean?)
+  (->* (tag-uri?
+        valid-url-string?
+        xexpr?
+        (listof feed-entry?)
+        (or/c string? (list/c string? string?))
+        valid-url-string?
+        person?
+        boolean?)
        (#:type (or/c 'serial 'episodic #f)
         #:block? boolean?
         #:complete? boolean?
         #:new-feed-url (or/c valid-url-string? #f))
        podcast?)
-  (podcast_ id site-url name entries category image-url explicit? type block? complete? new-feed-url))
+  (podcast_ id site-url name entries category image-url owner explicit? type block? complete? new-feed-url))

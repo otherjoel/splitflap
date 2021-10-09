@@ -1,6 +1,7 @@
 #lang racket/base
 
-(require racket/port
+(require (for-syntax racket/base)
+         racket/port
          racket/string
          txexpr
          xml)
@@ -148,5 +149,6 @@ XML
 (define include-generator? (make-parameter #t))
 
 ;; Handy for splicing something or nothing into xexprs
-(define (if/sp check val)
-  (if check (list val) '()))
+(define-syntax (if/sp stx)
+  (syntax-case stx ()
+    [(_ check val) #'(if check (list val) '())]))
