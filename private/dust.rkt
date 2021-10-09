@@ -146,3 +146,7 @@ XML
 ;; Parameter determines whether feed output will include a <generator> tag
 ;; Useful for keeping unit tests from breaking on different versions
 (define include-generator? (make-parameter #t))
+
+;; Handy for splicing something or nothing into xexprs
+(define (if/sp check val)
+  (if check (list val) '()))
