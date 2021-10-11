@@ -137,17 +137,6 @@ XML
 
 ;; ~~ Other stuff ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-;; Build the <generator> tag
-(define (generator dialect)
-  (define gen-str (format "Racket v~a [~a]" (version) (system-type 'gc)))
-  (case dialect
-    [(rss) `(generator ,(string-append gen-str " (https://racket-lang.org)"))]
-    [(atom) `(generator [[uri "https://racket-lang.org"] [version ,(version)]] ,gen-str)]))
-
-;; Parameter determines whether feed output will include a <generator> tag
-;; Useful for keeping unit tests from breaking on different versions
-(define include-generator? (make-parameter #t))
-
 ;; Handy for splicing something or nothing into xexprs
 (define-syntax (if/sp stx)
   (syntax-case stx ()

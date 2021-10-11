@@ -24,6 +24,40 @@
          include-generator?
          express-xml)
 
+;; ~~ Parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+(define feed-locale
+  (make-parameter
+   (match
+       (case (system-type 'os)
+         [(unix macosx) (bytes->string/utf-8 (system-language+country))]
+         [(windows)
+          ((dynamic-require 'file/resource 'get-resource)
+           "HKEY_CURRENT_USER" "Control Panel\\International\\LocaleName")])
+     [(? string? loc) (string->symbol (substring loc 0 2))]
+     [_ #f])
+   (λ (v)
+     (unless (or (iso-639-language-code? v) (not v))
+       (raise-argument-error 'feed-locale "iso-639-language-code? (or #false)" v))
+     v)))
+
+;; Build the <generator> tag (caches for each dialect)
+(define generator
+  (let ([cache (make-hash)])
+    (λ (dialect)
+      (hash-ref!
+       cache
+       dialect
+       (λ ()
+         (define gen-str (format "Racket v~a [~a]" (version) (system-type 'gc)))
+         (case dialect
+           [(rss) `(generator ,(string-append gen-str " (https://racket-lang.org)"))]
+           [(atom) `(generator [[uri "https://racket-lang.org"] [version ,(version)]] ,gen-str)]))))))
+
+;; Parameter determines whether feed output will include a <generator> tag
+;; Useful for keeping unit tests from breaking on different versions
+(define include-generator? (make-parameter #t))
+
 (struct feed-entry
   (id url title author published updated content media)
   #:constructor-name feed-entry_
