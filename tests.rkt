@@ -19,15 +19,15 @@
 (define expect-atom #<<ATOM
 <entry>
   <title type="text">Kate&apos;s First Post</title>
-  <id>tag:example.com,2007:blog.one</id>
   <link rel="alternate" href="https://example.com/blog/one.html" />
+  <updated>2007-03-17T00:00:00Z</updated>
+  <published>2007-03-17T00:00:00Z</published>
   <link rel="enclosure" type="audio/x-m4a" length="1234" href="gopher://umn.edu/greeting.m4a" />
   <author>
     <name>Kate Poster</name>
     <email>kate@example.com</email>
   </author>
-  <updated>2007-03-17T00:00:00Z</updated>
-  <published>2007-03-17T00:00:00Z</published>
+  <id>tag:example.com,2007:blog.one</id>
   <content>
     <![CDATA[<div><p>Welcome to my blog.</p><ul><li>& ' < > © ℗ ™</li></ul></div>]]>
   </content>
@@ -44,21 +44,21 @@ ATOM
 
 <feed xmlns="http://www.w3.org/2005/Atom">
   <title>Kate Poster Posts</title>
-  <id>tag:example.com,2007:blog</id>
   <link rel="self" href="https://example.com/feed.atom" />
   <link rel="alternate" href="https://example.com/" />
   <updated>2007-03-17T00:00:00Z</updated>
+  <id>tag:example.com,2007:blog</id>
   <entry>
     <title type="text">Kate&apos;s First Post</title>
-    <id>tag:example.com,2007:blog.one</id>
     <link rel="alternate" href="https://example.com/blog/one.html" />
+    <updated>2007-03-17T00:00:00Z</updated>
+    <published>2007-03-17T00:00:00Z</published>
     <link rel="enclosure" type="audio/x-m4a" length="1234" href="gopher://umn.edu/greeting.m4a" />
     <author>
       <name>Kate Poster</name>
       <email>kate@example.com</email>
     </author>
-    <updated>2007-03-17T00:00:00Z</updated>
-    <published>2007-03-17T00:00:00Z</published>
+    <id>tag:example.com,2007:blog.one</id>
     <content>
       <![CDATA[<div><p>Welcome to my blog.</p><ul><li>& ' < > © ℗ ™</li></ul></div>]]>
     </content>
@@ -72,18 +72,18 @@ ATOMFEED
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Kate Poster Posts</title>
-    <description>Kate Poster Posts</description>
     <atom:link rel="self" href="https://example.com/feed.rss" type="application/rss+xml" />
     <link>https://example.com/</link>
     <pubDate>Sat, 17 Mar 2007 00:00:00 +0000</pubDate>
     <lastBuildDate>Sat, 17 Mar 2007 00:00:00 +0000</lastBuildDate>
+    <description>Kate Poster Posts</description>
     <item>
       <title>Kate's First Post</title>
-      <author>kate@example.com (Kate Poster)</author>
       <link>https://example.com/blog/one.html</link>
-      <guid isPermaLink="false">tag:example.com,2007:blog.one</guid>
-      <enclosure url="gopher://umn.edu/greeting.m4a" length="1234" type="audio/x-m4a" />
       <pubDate>Sat, 17 Mar 2007 00:00:00 +0000</pubDate>
+      <enclosure url="gopher://umn.edu/greeting.m4a" length="1234" type="audio/x-m4a" />
+      <author>kate@example.com (Kate Poster)</author>
+      <guid isPermaLink="false">tag:example.com,2007:blog.one</guid>
       <description>
         <![CDATA[<div><p>Welcome to my blog.</p><ul><li>& ' < > © ℗ ™</li></ul></div>]]>
       </description>
