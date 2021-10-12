@@ -36,7 +36,8 @@
           ((dynamic-require 'file/resource 'get-resource)
            "HKEY_CURRENT_USER" "Control Panel\\International\\LocaleName")])
      [(? string? loc) (string->symbol (substring loc 0 2))]
-     [_ #f])
+     [(var v) (raise (exn:fail:unsupported (format "attempt to determine system language resulted in: ~a" v)
+                                           (current-continuation-marks)))])
    (λ (v)
      (unless (or (iso-639-language-code? v) (not v))
        (raise-argument-error 'feed-locale "iso-639-language-code? (or #false)" v))
