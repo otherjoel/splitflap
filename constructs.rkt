@@ -5,6 +5,7 @@
 
 (require (for-syntax racket/base)
          "private/xml-generic.rkt"
+         "private/dust.rkt"
          gregor
          net/url-string
          racket/contract
@@ -14,31 +15,30 @@
          txexpr
          web-server/private/mime-types)
 
-;; Interfaces
-
 (provide dns-domain?
          valid-url-string?
-         tag-entity-date?
-         tag-specific-string?
          email-address?
          validate-email-address
-         rss-dialect?
-         
+         ; Tag URIs:
+         tag-entity-date?
          mint-tag-uri
          tag-uri?
          tag-uri->string
          append-specific
-                  
-         person
-         (rename-out [human? person?])
+         tag-specific-string?
+         ; RSS Dialects:
+         rss-dialect?
+         ; Persons
+         person?
+         (rename-out [make-person person])
          person->xexpr
-
+         ; Moments
          infer-moment
          moment->string
-
+         ; Enclosures
          (struct-out enclosure)
          file->enclosure
-
+         ; Language codes
          iso-639-language-code?)
 
 ;; (private) convenience macro
@@ -303,29 +303,29 @@
 
 ;; ~~ Persons ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-(struct human (name email uri))
+(struct person (name email uri) #:constructor-name person_)
 
-(define/contract (person name email [uri #f])
-  (->* (string? email-address?) ((or/c valid-url-string? #f)) human?)
-  (human name email uri))
+(define/contract (make-person name email [uri #f])
+  (->* (string? email-address?) ((or/c valid-url-string? #f)) person?)
+  (person_ name email uri))
   
 (define/contract (person->xexpr p entity dialect #:elem-prefix [prefix #f])
-  (->* (human? symbol? rss-dialect?) (#:elem-prefix (or/c symbol? #f)) txexpr?)
+  (->* (person? symbol? rss-dialect?) (#:elem-prefix (or/c symbol? #f)) txexpr?)
   (match-define (list name-tag email-tag uri-tag)
     (cond [prefix (map (λ (s) (string->symbol (format "~a~a" prefix s))) '(name email uri))]
           [else '(name email uri)]))
+  (match-define (person name email uri) p)
   (case dialect
     [(atom)
-     (define uri (if (human-uri p) `((,uri-tag ,(human-uri p))) `()))
-     (txexpr entity '() `((,name-tag ,(human-name p))
-                          (,email-tag ,(human-email p))
-                          ,@uri))]
+     (txexpr entity '() `((,name-tag ,name)
+                          (,email-tag ,email)
+                          ,@(if/sp uri `(,uri-tag uri))))]
     [(rss)
-     (txexpr entity '() (list (format "~a (~a)" (human-email p) (human-name p))))]))
+     (txexpr entity '() (list (format "~a (~a)" email name)))]))
   
 (module+ test
-  (define joel (person "Joel" "joel@msn.com"))
-  (check-true (human? joel))
+  (define joel (make-person "Joel" "joel@msn.com"))
+  (check-true (person? joel))
   (check-equal? (person->xexpr joel 'author 'rss) '(author "joel@msn.com (Joel)"))
   (check-equal? (person->xexpr joel 'author 'atom) '(author (name "Joel") (email "joel@msn.com")))
 
