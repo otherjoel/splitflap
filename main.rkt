@@ -12,7 +12,8 @@
          racket/match
          xml)
 
-(provide food?
+(provide feed-locale
+         food?
          (rename-out [make-feed-entry feed-entry]
                      [make-episode episode])
          (all-from-out "constructs.rkt")
@@ -24,7 +25,7 @@
          include-generator?
          express-xml)
 
-;; ~~ Parameters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;; ~~ Ancillary elements ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 (define feed-locale
   (make-parameter
@@ -57,6 +58,9 @@
 ;; Parameter determines whether feed output will include a <generator> tag
 ;; Useful for keeping unit tests from breaking on different versions
 (define include-generator? (make-parameter #t))
+
+;;
+;; ~~ Feed Entries ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 (struct feed-entry
   (id url title author published updated content media)
@@ -103,6 +107,10 @@
 (define (entry-newer? maybe-newer other)
   (moment>? (feed-entry-updated maybe-newer) (feed-entry-updated other)))
 
+
+;;
+;; ~~ Feeds ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 (struct feed
   (id site-url name entries)
   #:guard (struct-guard/c tag-uri? valid-url-string? xexpr? (listof feed-entry?))
@@ -120,7 +128,8 @@
      (define feed-xpr
        (case dialect
          [(atom)
-          `(feed [[xmlns "http://www.w3.org/2005/Atom"]]
+          `(feed [[xmlns "http://www.w3.org/2005/Atom"]
+                  [xml:lang ,(symbol->string (feed-locale))]]
                  (title ,feed-name)
                  (link [[rel "self"] [href ,feed-url]])
                  (link [[rel "alternate"] [href ,site-url]])
@@ -139,6 +148,7 @@
                  (lastBuildDate ,(moment->string last-updated 'rss))
                  ,@(if/sp (include-generator?) (generator 'rss))
                  (description ,feed-name)
+                 (language ,(symbol->string (feed-locale)))
                  ,@(for/list ([e (in-list entries-sorted)])
                      (<-express-xml e 'rss #f #:as (if to-xml? 'xexpr-cdata 'xexpr)))))]))
      (case result-type
@@ -146,8 +156,10 @@
        [(xml) (xml-document feed-xpr)]
        [(xml-string) (indented-xml-string feed-xpr #:document? #t)]))])
 
-;; ~~ Podcast feeds and episodes ~~~~~~~~~~~~~~~~~
+;; ~~ Podcast episodes and feeds ~~~~~~~~~~~~~~~~~
 
+;; Episodes are feed-entries that require an enclosure, and add required and optional tags
+;; and flags from Apple’s podcast feed specifications.
 (struct episode feed-entry (duration image-url explicit? episode-n season-n type block?)
   #:constructor-name episode_
   #:methods gen:food
@@ -200,6 +212,8 @@
   (episode_ id url title author published updated content media
             duration image-url explicit? episode-n season-n type block?))
 
+;; Podcasts extend feeds. They will only ever express as RSS 2.0 because that’s what Apple’s
+;; podcast directory requires.
 (struct podcast feed (category image-url owner explicit? type block? complete? new-feed-url)
   #:constructor-name podcast_
   #:methods gen:food
@@ -230,7 +244,7 @@
               (lastBuildDate ,(moment->string last-updated 'rss))
               ,@(if/sp (include-generator?) (generator 'rss))
               (description ,feed-name)
-              (language "en-US")
+              (language ,(symbol->string (feed-locale)))
               ,(person->xexpr owner 'itunes:owner 'atom #:elem-prefix 'itunes:)
               (itunes:image [[href ,image-url]])
               ,category

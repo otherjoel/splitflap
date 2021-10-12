@@ -42,7 +42,7 @@ ATOM
 (define expect-feed-atom #<<ATOMFEED
 <?xml version="1.0" encoding="UTF-8"?>
 
-<feed xmlns="http://www.w3.org/2005/Atom">
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
   <title>Kate Poster Posts</title>
   <link rel="self" href="https://example.com/feed.atom" />
   <link rel="alternate" href="https://example.com/" />
@@ -77,6 +77,7 @@ ATOMFEED
     <pubDate>Sat, 17 Mar 2007 00:00:00 +0000</pubDate>
     <lastBuildDate>Sat, 17 Mar 2007 00:00:00 +0000</lastBuildDate>
     <description>Kate Poster Posts</description>
+    <language>en</language>
     <item>
       <title>Kate's First Post</title>
       <link>https://example.com/blog/one.html</link>
@@ -92,6 +93,7 @@ ATOMFEED
 </rss>
 RSSFEED
   )
-(parameterize ([include-generator? #f])
+(parameterize ([include-generator? #f]
+               [feed-locale 'en])
   (check-equal? (express-xml f1 'atom "https://example.com/feed.atom") expect-feed-atom)
   (check-equal? (express-xml f1 'rss "https://example.com/feed.rss") expect-feed-rss))
