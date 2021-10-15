@@ -10,9 +10,10 @@
          racket/contract
          racket/generic
          racket/match
+         racket/promise
          xml)
 
-(provide feed-locale
+(provide feed-language
          food?
          (rename-out [make-feed-entry feed-entry]
                      [make-episode episode])
@@ -27,20 +28,12 @@
 
 ;; ~~ Ancillary elements ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-(define feed-locale
+(define feed-language
   (make-parameter
-   (match
-       (case (system-type 'os)
-         [(unix macosx) (bytes->string/utf-8 (system-language+country))]
-         [(windows)
-          ((dynamic-require 'file/resource 'get-resource)
-           "HKEY_CURRENT_USER" "Control Panel\\International\\LocaleName")])
-     [(? string? loc) (string->symbol (substring loc 0 2))]
-     [(var v) (raise (exn:fail:unsupported (format "attempt to determine system language resulted in: ~a" v)
-                                           (current-continuation-marks)))])
+   #f
    (λ (v)
      (unless (or (iso-639-language-code? v) (not v))
-       (raise-argument-error 'feed-locale "iso-639-language-code? (or #false)" v))
+       (raise-argument-error 'feed-locale "either iso-639-language-code? or #false" v))
      v)))
 
 ;; Build the <generator> tag (caches for each dialect)
@@ -130,7 +123,7 @@
        (case dialect
          [(atom)
           `(feed [[xmlns "http://www.w3.org/2005/Atom"]
-                  [xml:lang ,(symbol->string (feed-locale))]]
+                  [xml:lang ,(symbol->string (or (feed-language) (force system-language)))]]
                  (title ,feed-name)
                  (link [[rel "self"] [href ,feed-url]])
                  (link [[rel "alternate"] [href ,site-url]])
@@ -149,7 +142,7 @@
                  (lastBuildDate ,(moment->string last-updated 'rss))
                  ,@(if/sp (include-generator?) (generator 'rss))
                  (description ,feed-name)
-                 (language ,(symbol->string (feed-locale)))
+                 (language ,(symbol->string (or (feed-language) (force system-language))))
                  ,@(for/list ([e (in-list entries-sorted)])
                      (<-express-xml e 'rss #f #:as (if to-xml? 'xexpr-cdata 'xexpr)))))]))
      (case result-type
@@ -245,7 +238,7 @@
               (lastBuildDate ,(moment->string last-updated 'rss))
               ,@(if/sp (include-generator?) (generator 'rss))
               (description ,feed-name)
-              (language ,(symbol->string (feed-locale)))
+              (language ,(symbol->string (or (feed-language) (force system-language))))
               ,(person->xexpr owner 'itunes:owner 'atom #:elem-prefix 'itunes:)
               (itunes:image [[href ,image-url]])
               ,category

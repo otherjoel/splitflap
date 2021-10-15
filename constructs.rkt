@@ -10,6 +10,7 @@
          net/url-string
          racket/contract
          racket/match
+         racket/promise
          racket/runtime-path
          racket/string
          txexpr
@@ -39,7 +40,8 @@
          (struct-out enclosure)
          file->enclosure
          ; Language codes
-         iso-639-language-code?)
+         iso-639-language-code?
+         system-language)
 
 ;; (private) convenience macro
 (define-syntax (define-explained-contract stx)
@@ -438,3 +440,15 @@
 (define-explained-contract (iso-639-language-code? v)
   "ISO 639 language code symbol"
   (and (symbol? v) (memq v language-codes) #t))
+
+(define system-language
+  (delay
+    (match
+        (case (system-type 'os)
+          [(unix macosx) (bytes->string/utf-8 (system-language+country))]
+          [(windows)
+           ((dynamic-require 'file/resource 'get-resource)
+            "HKEY_CURRENT_USER" "Control Panel\\International\\LocaleName")])
+      [(? string? loc) (string->symbol (substring loc 0 2))]
+      [(var v) (raise (exn:fail:unsupported (format "attempt to determine system language resulted in: ~a" v)
+                                            (current-continuation-marks)))])))
