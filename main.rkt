@@ -154,7 +154,8 @@
 
 ;; Episodes are feed-entries that require an enclosure, and add required and optional tags
 ;; and flags from Apple’s podcast feed specifications.
-(struct episode feed-entry (duration image-url explicit? episode-n season-n type block?)
+(struct episode (id url title author published updated content media
+                    duration image-url explicit? episode-n season-n type block?)
   #:constructor-name episode_
   #:methods gen:food
   [(define/generic <-express-xml express-xml)
@@ -208,7 +209,7 @@
 
 ;; Podcasts extend feeds. They will only ever express as RSS 2.0 because that’s what Apple’s
 ;; podcast directory requires.
-(struct podcast feed (category image-url owner explicit? type block? complete? new-feed-url)
+(struct podcast (id site-url name entries category image-url owner explicit? type block? complete? new-feed-url)
   #:constructor-name podcast_
   #:methods gen:food
   [(define/generic <-express-xml express-xml)
