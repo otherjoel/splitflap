@@ -10,7 +10,7 @@
 (define site-id (mint-tag-uri "example.com" "2007" "blog"))
 (define e1
   (parameterize ([current-timezone 0])
-    (feed-entry (append-specific site-id "one")
+    (feed-item (append-specific site-id "one")
                 "https://example.com/blog/one.html"
                 "Kate's First Post"
                 (person "Kate Poster" "kate@example.com")

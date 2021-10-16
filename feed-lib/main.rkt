@@ -15,10 +15,10 @@
 
 (provide feed-language
          food?
-         (rename-out [make-feed-entry feed-entry]
+         (rename-out [make-feed-item feed-item]
                      [make-episode episode])
          (all-from-out "constructs.rkt")
-         feed-entry?
+         feed-item?
          episode?
          feed
          feed?
@@ -56,15 +56,15 @@
 ;;
 ;; ~~ Feed Entries ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-(struct feed-entry
+(struct feed-item
   (id url title author published updated content media)
-  #:constructor-name feed-entry_
+  #:constructor-name feed-item_
   #:methods gen:food
   [(define/generic <-express-xml express-xml)
    (define/contract (express-xml e dialect url #:as [result-type 'xml-string])
      (->* (any/c rss-dialect? any/c) (#:as xml-type/c) any/c)
      
-     (match-define (feed-entry id url title author published updated content media) e)
+     (match-define (feed-item id url title author published updated content media) e)
      (define to-xml? (memq result-type '(xml xml-string xexpr-cdata)))
      (define entry-xpr
        (case dialect
@@ -92,14 +92,14 @@
        [(xml) (xexpr->xml entry-xpr)]
        [(xml-string) (indented-xml-string entry-xpr)]))])
 
-(define/contract (make-feed-entry id url title author published updated content [media #f])
+(define/contract (make-feed-item id url title author published updated content [media #f])
   (->* (tag-uri? valid-url-string? string? person? moment? moment? xexpr?)
        ((or/c enclosure? #f))
-       feed-entry?)
-  (feed-entry_ id url title author published updated content media))
+       feed-item?)
+  (feed-item_ id url title author published updated content media))
 
 (define (entry-newer? maybe-newer other)
-  (moment>? (feed-entry-updated maybe-newer) (feed-entry-updated other)))
+  (moment>? (feed-item-updated maybe-newer) (feed-item-updated other)))
 
 
 ;;
@@ -107,7 +107,7 @@
 
 (struct feed
   (id site-url name entries)
-  #:guard (struct-guard/c tag-uri? valid-url-string? xexpr? (listof feed-entry?))
+  #:guard (struct-guard/c tag-uri? valid-url-string? xexpr? (listof feed-item?))
 
   #:methods gen:food
   [(define/generic <-express-xml express-xml)
@@ -116,7 +116,7 @@
 
      (match-define (feed feed-id site-url feed-name entries) f)
      (define entries-sorted (sort entries entry-newer?))
-     (define last-updated (feed-entry-updated (car entries-sorted)))
+     (define last-updated (feed-item-updated (car entries-sorted)))
      (define to-xml? (memq result-type '(xml xml-string)))
   
      (define feed-xpr
@@ -224,7 +224,7 @@
           `(itunes:category [[text ,cat1]]
                             (itunes:category [[text ,cat2]]))]
          [(? string? c) `(itunes:category [[text ,c]])]))
-     (define last-updated (feed-entry-updated (car episodes-sorted)))
+     (define last-updated (feed-item-updated (car episodes-sorted)))
      (define to-xml? (memq result-type '(xml xml-string)))
 
      (define feed-xpr
@@ -263,7 +263,7 @@
   (->* (tag-uri?
         valid-url-string?
         xexpr?
-        (listof feed-entry?)
+        (listof feed-item?)
         (or/c string? (list/c string? string?))
         valid-url-string?
         person?
