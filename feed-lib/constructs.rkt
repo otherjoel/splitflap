@@ -40,6 +40,7 @@
          (struct-out enclosure)
          file->enclosure
          ; Language codes
+         language-codes
          iso-639-language-code?
          system-language)
 
@@ -434,12 +435,12 @@
 
 ;; ~~ ISO 639 Language codes ~~~~~~~~~~~~~~~~~~~~~
 
-(define language-codes
+(define (language-codes)
   '(ab aa af ak sq am ar an hy as av ae ay az bm ba eu be bn bh bi bs br bg my ca km ch ce ny zh cu cv kw co cr hr cs da dv nl dz en eo et ee fo fj fi fr ff gd gl lg ka de ki el kl gn gu ht ha he hz hi ho hu is io ig id ia ie iu ik ga it ja jv kn kr ks kk rw kv kg ko kj ku ky lo la lv lb li ln lt lu mk mg ms ml mt gv mi mr mh ro mn na nv nd ng ne se no nb nn ii oc oj or om os pi pa ps fa pl pt qu rm rn ru sm sg sa sc sr sn sd si sk sl so st nr es su sw ss sv tl ty tg ta tt te th bo ti to ts tn tr tk tw ug uk ur uz ve vi vo wa cy fy wo xh yi yo za zu))
 
 (define-explained-contract (iso-639-language-code? v)
   "ISO 639 language code symbol"
-  (and (symbol? v) (memq v language-codes) #t))
+  (and (symbol? v) (memq v (language-codes)) #t))
 
 (define system-language
   (delay
@@ -449,6 +450,10 @@
           [(windows)
            ((dynamic-require 'file/resource 'get-resource)
             "HKEY_CURRENT_USER" "Control Panel\\International\\LocaleName")])
-      [(? string? loc) (string->symbol (substring loc 0 2))]
-      [(var v) (raise (exn:fail:unsupported (format "attempt to determine system language resulted in: ~a" v)
-                                            (current-continuation-marks)))])))
+      [(? string? loc)
+       (string->symbol (substring loc 0 2))]
+      [(var v)
+       (raise
+        (exn:fail:unsupported
+         (format "attempt to determine system language resulted in: ~a" v)
+         (current-continuation-marks)))])))
