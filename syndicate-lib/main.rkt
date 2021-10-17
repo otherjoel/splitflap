@@ -16,7 +16,8 @@
 (provide feed-language
          food?
          (rename-out [make-feed-item feed-item]
-                     [make-episode episode])
+                     [make-episode episode]
+                     [make-podcast podcast])
          (all-from-out "constructs.rkt")
          feed-item?
          episode?
@@ -100,7 +101,6 @@
 
 (define (entry-newer? maybe-newer other)
   (moment>? (feed-item-updated maybe-newer) (feed-item-updated other)))
-
 
 ;;
 ;; ~~ Feeds ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
