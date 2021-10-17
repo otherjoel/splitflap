@@ -1,4 +1,4 @@
-# racket-rss
+# `syndicate`
 
 🔖⚛️ RSS / Atom feed generation library for Racket. **Still in progress**
 
