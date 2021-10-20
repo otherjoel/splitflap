@@ -328,14 +328,14 @@
   (->* (string? email-address?) ((or/c valid-url-string? #f)) person?)
   (person_ name email uri))
   
-(define/contract (person->xexpr p entity dialect #:elem-prefix [prefix #f])
-  (->* (person? symbol? rss-dialect?) (#:elem-prefix (or/c symbol? #f)) txexpr?)
+(define/contract (person->xexpr p entity dialect)
+  (-> person? symbol? (or/c rss-dialect? 'itunes) txexpr?)
   (match-define (list name-tag email-tag uri-tag)
-    (cond [prefix (map (λ (s) (string->symbol (format "~a~a" prefix s))) '(name email uri))]
+    (cond [(eq? dialect 'itunes) '(itunes:name itunes:email itunes:uri)]
           [else '(name email uri)]))
   (match-define (person name email uri) p)
   (case dialect
-    [(atom)
+    [(atom itunes)
      (txexpr entity '() `((,name-tag ,name)
                           (,email-tag ,email)
                           ,@(if/sp uri `(,uri-tag uri))))]
@@ -349,8 +349,7 @@
   (check-equal? (person->xexpr joel 'author 'atom) '(author (name "Joel") (email "joel@msn.com")))
 
   ;; Prefixing child elements
-  (check-equal? (person->xexpr joel 'owner 'rss #:elem-prefix 'itunes:) '(owner "joel@msn.com (Joel)"))
-  (check-equal? (person->xexpr joel 'itunes:owner 'atom #:elem-prefix 'itunes:)
+  (check-equal? (person->xexpr joel 'itunes:owner 'itunes)
                 '(itunes:owner (itunes:name "Joel") (itunes:email "joel@msn.com"))))
 
 ;; ~~ MIME types ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -388,19 +387,23 @@
 (struct enclosure (url type size)
   #:guard (struct-guard/c valid-url-string? (or/c non-empty-string? #f) exact-nonnegative-integer?)
   #:methods gen:food
-  [(define/contract (express-xml e dialect _url #:as [r 'xexpr])
-     (->* (any/c rss-dialect? any/c) (#:as symbol?) xexpr?)
+  [(define/contract (express-xml e dialect [_url #f] #:as [r 'xexpr])
+     (->* (any/c rss-dialect?) (any/c #:as symbol?) xexpr?)
      (match-define (enclosure url type size) e)
-     (case dialect
-       [(atom)
-        `(link [[rel "enclosure"]
-                ,@(if type `((type ,type)) '())
-                [length ,(number->string size)]
-                [href ,url]])]
-       [(rss)
-        `(enclosure [[url ,url]
-                     [length ,(number->string size)]
-                     ,@(if type `((type ,type)) '())])]))])
+     (define encl-xpr
+       (case dialect
+         [(atom)
+          `(link [[rel "enclosure"]
+                  ,@(if type `((type ,type)) '())
+                  [length ,(number->string size)]
+                  [href ,url]])]
+         [(rss)
+          `(enclosure [[url ,url]
+                       [length ,(number->string size)]
+                       ,@(if type `((type ,type)) '())])]))
+     (case r
+       [(xexpr xexpr-cdata) encl-xpr]
+       [(xml-string) (indented-xml-string encl-xpr)]))])
 
 (module+ test
   (require racket/file)
@@ -412,14 +415,14 @@
     (enclosure "gopher://umn.edu/greeting.m4a" "audio/x-m4a" 1234))
 
   (check-txexprs-equal?
-   (express-xml test-enc 'atom #f)
+   (express-xml test-enc 'atom)
    '(link [[rel "enclosure"]
            [href "gopher://umn.edu/greeting.m4a"]
            [length "1234"]
            [type "audio/x-m4a"]]))
   
   (check-txexprs-equal?
-   (express-xml test-enc 'rss #f)
+   (express-xml test-enc 'rss)
    '(enclosure [[url "gopher://umn.edu/greeting.m4a"]
                 [length "1234"]
                 [type "audio/x-m4a"]]))

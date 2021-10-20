@@ -36,7 +36,7 @@
   </content>
 </entry>})
 
-(check-equal? (express-xml e1 'atom #f) expect-atom)
+(check-equal? (express-xml e1 'atom) expect-atom)
 
 (check-exn exn:fail:contract? (λ () (feed site-id "not a url" "Title" (list e1))))
   

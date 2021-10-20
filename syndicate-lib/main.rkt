@@ -62,8 +62,8 @@
   #:constructor-name feed-item_
   #:methods gen:food
   [(define/generic <-express-xml express-xml)
-   (define/contract (express-xml e dialect url #:as [result-type 'xml-string])
-     (->* (any/c rss-dialect? any/c) (#:as xml-type/c) any/c)
+   (define/contract (express-xml e dialect [url #f] #:as [result-type 'xml-string])
+     (->* (any/c rss-dialect?) (any/c #:as xml-type/c) any/c)
      
      (match-define (feed-item id url title author published updated content media) e)
      (define to-xml? (memq result-type '(xml xml-string xexpr-cdata)))
@@ -111,9 +111,10 @@
 
   #:methods gen:food
   [(define/generic <-express-xml express-xml)
-   (define/contract (express-xml f dialect feed-url #:as [result-type 'xml-string])
-     (->* (any/c rss-dialect? valid-url-string?) (#:as xml-type/c) (or/c string? document? txexpr?))
-
+   (define/contract (express-xml f dialect [feed-url #f] #:as [result-type 'xml-string])
+     (->* (any/c rss-dialect?) ((or/c valid-url-string? #f) #:as xml-type/c) (or/c string? document? txexpr?))
+     (unless (valid-url-string? feed-url)
+       (raise-argument-error 'express-xml "valid URL (required for #<feed>)" feed-url))
      (match-define (feed feed-id site-url feed-name entries) f)
      (define entries-sorted (sort entries entry-newer?))
      (define last-updated (feed-item-updated (car entries-sorted)))
@@ -159,8 +160,8 @@
   #:constructor-name episode_
   #:methods gen:food
   [(define/generic <-express-xml express-xml)
-   (define/contract (express-xml ep dialect feed-url #:as [result-type 'xml-string])
-     (->* (any/c rss-dialect? any/c) (#:as xml-type/c) any/c)
+   (define/contract (express-xml ep dialect [feed-url #f] #:as [result-type 'xml-string])
+     (->* (any/c rss-dialect?) (any/c #:as xml-type/c) any/c)
      (define to-xml? (memq result-type '(xml xml-string xexpr-cdata)))
      (match-define
        (episode id url title author published updated content media
@@ -213,9 +214,10 @@
   #:constructor-name podcast_
   #:methods gen:food
   [(define/generic <-express-xml express-xml)
-   (define/contract (express-xml p dialect feed-url #:as [result-type 'xml-string])
-     (->* (any/c rss-dialect? valid-url-string?) (#:as xml-type/c) (or/c string? document? txexpr?))
-
+   (define/contract (express-xml p dialect [feed-url #f] #:as [result-type 'xml-string])
+     (->* (any/c rss-dialect?) ((or/c valid-url-string? #f) #:as xml-type/c) (or/c string? document? txexpr?))
+     (unless (valid-url-string? feed-url)
+       (raise-argument-error 'express-xml "valid URL (required for #<podcast>)" feed-url))
      (match-define (podcast feed-id site-url feed-name episodes cat image-url owner explicit? type block? complete? new-feed-url) p)
      (define episodes-sorted (sort episodes entry-newer?))
      (define category
@@ -240,7 +242,7 @@
               ,@(if/sp (include-generator?) (generator 'rss))
               (description ,feed-name)
               (language ,(symbol->string (or (feed-language) (force system-language))))
-              ,(person->xexpr owner 'itunes:owner 'atom #:elem-prefix 'itunes:)
+              ,(person->xexpr owner 'itunes:owner ''itunes)
               (itunes:image [[href ,image-url]])
               ,category
               (itunes:explicit ,(if explicit? "yes" "no"))

@@ -94,12 +94,12 @@
 (module+ test
   (define judy-str "Judy's friend \"George\"")
   ;; no effect without '(type "text") in attrs
-  (check-equal? (pre-escape `(div [[id "t's"]] ,judy-str (div ,judy-str)))
-                `(div [[id "t's"]] ,judy-str (div ,judy-str)))
+  (check-equal? (pre-escape `(div (div [[id "t's"]] ,judy-str (div ,judy-str))))
+                `(div (div [[id "t's"]] ,judy-str (div ,judy-str))))
 
   ;; escapes with '(type "text") in attrs, but only immediate child strings
-  (check-equal? (pre-escape `(div [[type "text"]] ,judy-str (div ,judy-str)))
-                `(div [[type "text"]] "Judy%amp%apos;s friend %amp%quot;George%amp%quot;" (div ,judy-str))))
+  (check-equal? (pre-escape `(div (div [[type "text"]] ,judy-str (div ,judy-str))))
+                `(div (div [[type "text"]] "Judy%amp%apos;s friend %amp%quot;George%amp%quot;" (div ,judy-str)))))
 
 ;; ~~ XML Display ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
