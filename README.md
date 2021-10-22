@@ -1,4 +1,4 @@
-# `syndicate`
+# `splitflap`
 
 🔖⚛️ RSS / Atom feed generation library for Racket. **Still in progress**
 

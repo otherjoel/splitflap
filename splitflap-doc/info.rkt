@@ -1,7 +1,7 @@
 #lang info
 
-(define collection "feed")
-(define scribblings '(("syndicate.scrbl")))
+(define collection "splitflap")
+(define scribblings '(("splitflap.scrbl")))
 
 (define deps '("scribble-lib"
                "base"))
@@ -9,9 +9,9 @@
                      "gregor-lib"
                      "racket-doc"
                      "scribble-lib"
-                     "syndicate-lib"))
+                     "splitflap-lib"))
 
-(define update-implies '("syndicate-lib"))
+(define update-implies '("splitflap-lib"))
 
-(define pkg-desc "documentation part of \"syndicate\"")
+(define pkg-desc "documentation part of \"splitflap\"")
 (define license 'BlueOak-1.0.0)
