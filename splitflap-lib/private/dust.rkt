@@ -47,20 +47,20 @@
 
 ;; This is the set of characters (besides #\& #\< and #\>) that Apple gets snippy about.
 ;; See https://podcasters.apple.com/support/823-podcast-requirements
-(define string->entity
-  (hash 
-   "'" "%amp%apos;"
-   "\"" "%amp%quot;"
-   "©" "%amp%#xA9;"
-   "℗" "%amp%#x2117;"
-   "™" "%amp%#x2112;"))
 
 (define (pre-escape-entities str)
+  (define char-escapes
+    (hash 
+     "'" "%amp%apos;"
+     "\"" "%amp%quot;"
+     "©" "%amp%#xA9;"
+     "℗" "%amp%#x2117;"
+     "™" "%amp%#x2112;"))
   (regexp-replace*
-   #rx"[&<>'\"©℗™]"
+   #rx"['\"©℗™]"
    str
    (lambda (match-str)
-     (hash-ref string->entity match-str match-str))))
+     (hash-ref char-escapes match-str match-str))))
 
 (define (post-escape-entities str)
   (string-replace str "%amp%" "&"))

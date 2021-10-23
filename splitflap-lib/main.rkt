@@ -75,7 +75,7 @@
             (link [[rel "alternate"] [href ,url]])
             (updated ,(moment->string updated 'atom))
             (published ,(moment->string published 'atom))
-            ,@(if/sp media (<-express-xml media 'atom #f))
+            ,@(if/sp media (<-express-xml media 'atom #:as 'xexpr))
             ,(person->xexpr author 'author 'atom)
             (id ,(tag-uri->string id))
             (content ,(if to-xml? (as-cdata content) (cdata-string (as-cdata content)))))]
@@ -84,7 +84,7 @@
             (title ,title)
             (link ,url)
             (pubDate ,(moment->string published 'rss))
-            ,@(if/sp media (<-express-xml media 'rss #f))
+            ,@(if/sp media (<-express-xml media 'rss #:as 'xexpr))
             ,(person->xexpr author 'author 'rss)
             (guid [[isPermaLink "false"]] ,(tag-uri->string id))
             (description ,(if to-xml? (as-cdata content) (cdata-string (as-cdata content)))))]))
@@ -132,7 +132,7 @@
                  (id ,(tag-uri->string feed-id))
                  ,@(if/sp (include-generator?) (generator 'atom))
                  ,@(for/list ([e (in-list entries-sorted)])
-                     (<-express-xml e 'atom #f #:as (if to-xml? 'xexpr-cdata 'xexpr))))]
+                     (<-express-xml e 'atom #:as (if to-xml? 'xexpr-cdata 'xexpr))))]
          [(rss)
           `(rss [[version "2.0"] [xmlns:atom "http://www.w3.org/2005/Atom"]]
                 (channel
@@ -145,7 +145,7 @@
                  (description ,feed-name)
                  (language ,(symbol->string (or (feed-language) (force system-language))))
                  ,@(for/list ([e (in-list entries-sorted)])
-                     (<-express-xml e 'rss #f #:as (if to-xml? 'xexpr-cdata 'xexpr)))))]))
+                     (<-express-xml e 'rss #:as (if to-xml? 'xexpr-cdata 'xexpr)))))]))
      (case result-type
        [(xexpr xexpr-cdata) feed-xpr]
        [(xml) (xml-document feed-xpr)]
@@ -171,7 +171,7 @@
          (title ,title)
          (link ,url)
          (pubDate ,(moment->string updated 'rss))
-         ,@(if/sp media (<-express-xml media 'rss #f))
+         ,@(if/sp media (<-express-xml media 'rss #:as 'xexpr))
          ,@(if/sp ep-type `(itunes:episodeType ,(symbol->string ep-type)))
          ,(person->xexpr author 'author 'rss)
          (guid [[isPermaLink "false"]] ,(tag-uri->string id))
@@ -251,7 +251,7 @@
               ,@(if/sp complete? '(itunes:complete "Yes"))
               ,@(if/sp new-feed-url `(itunes:new-feed-url ,new-feed-url))
               ,@(for/list ([e (in-list episodes-sorted)])
-                  (<-express-xml e 'rss #f #:as (if to-xml? 'xexpr-cdata 'xexpr))))))
+                  (<-express-xml e 'rss #:as (if to-xml? 'xexpr-cdata 'xexpr))))))
      (case result-type
        [(xexpr xexpr-cdata) feed-xpr]
        [(xml) (xml-document feed-xpr)]
