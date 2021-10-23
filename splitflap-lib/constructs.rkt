@@ -14,7 +14,8 @@
          racket/runtime-path
          racket/string
          txexpr
-         web-server/private/mime-types)
+         web-server/private/mime-types
+         xml)
 
 (provide dns-domain?
          valid-url-string?
@@ -387,7 +388,7 @@
 (struct enclosure (url type size)
   #:guard (struct-guard/c valid-url-string? (or/c non-empty-string? #f) exact-nonnegative-integer?)
   #:methods gen:food
-  [(define/contract (express-xml e dialect [_url #f] #:as [r 'xexpr])
+  [(define/contract (express-xml e dialect [_url #f] #:as [r 'xml-string])
      (->* (any/c rss-dialect?) (any/c #:as symbol?) xexpr?)
      (match-define (enclosure url type size) e)
      (define encl-xpr
@@ -403,6 +404,7 @@
                        ,@(if type `((type ,type)) '())])]))
      (case r
        [(xexpr xexpr-cdata) encl-xpr]
+       [(xml) (xexpr->xml encl-xpr)]
        [(xml-string) (indented-xml-string encl-xpr)]))])
 
 (module+ test
@@ -415,14 +417,14 @@
     (enclosure "gopher://umn.edu/greeting.m4a" "audio/x-m4a" 1234))
 
   (check-txexprs-equal?
-   (express-xml test-enc 'atom)
+   (express-xml test-enc 'atom #:as 'xexpr)
    '(link [[rel "enclosure"]
            [href "gopher://umn.edu/greeting.m4a"]
            [length "1234"]
            [type "audio/x-m4a"]]))
   
   (check-txexprs-equal?
-   (express-xml test-enc 'rss)
+   (express-xml test-enc 'rss #:as 'xexpr)
    '(enclosure [[url "gopher://umn.edu/greeting.m4a"]
                 [length "1234"]
                 [type "audio/x-m4a"]]))
@@ -432,13 +434,13 @@
     (enclosure "gopher://umn.edu/greeting.m4a" #f 1234))
   
   (check-txexprs-equal?
-   (express-xml test-enc2 'atom #f)
+   (express-xml test-enc2 'atom #:as 'xexpr)
    '(link [[rel "enclosure"]
            [href "gopher://umn.edu/greeting.m4a"]
            [length "1234"]]))
   
   (check-txexprs-equal?
-   (express-xml test-enc2 'rss #f)
+   (express-xml test-enc2 'rss  #:as 'xexpr)
    '(enclosure [[url "gopher://umn.edu/greeting.m4a"]
                 [length "1234"]])))
 
@@ -461,7 +463,7 @@
   "ISO 639 language code symbol"
   (and (symbol? v) (memq v (language-codes)) #t))
 
-(define system-language
+(define/contract system-language (promise/c iso-639-language-code?)
   (delay
     (match
         (case (system-type 'os)
@@ -470,7 +472,7 @@
            ((dynamic-require 'file/resource 'get-resource)
             "HKEY_CURRENT_USER" "Control Panel\\International\\LocaleName")])
       [(? string? loc)
-       (string->symbol (substring loc 0 2))]
+       (string->symbol (string-downcase (substring loc 0 2)))]
       [(var v)
        (raise
         (exn:fail:unsupported
