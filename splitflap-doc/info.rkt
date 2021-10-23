@@ -5,7 +5,9 @@
 
 (define deps '("scribble-lib"
                "base"))
-(define build-deps '("gregor-doc"
+(define build-deps '("net-doc"
+                     "txexpr"
+                     "gregor-doc"
                      "gregor-lib"
                      "racket-doc"
                      "scribble-lib"
