@@ -1,0 +1,10 @@
+.terminal {
+    margin-bottom: 1em;
+    padding: 0.5em;
+    width: 88%;
+    background: #fafafa;
+}
+
+.terminal .SIntrapara {
+    margin: 0 0 0 0;
+}

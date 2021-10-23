@@ -1,7 +1,7 @@
 #lang info
 
 (define collection "splitflap")
-(define scribblings '(("splitflap.scrbl")))
+(define scribblings '(("splitflap.scrbl" (multi-page))))
 
 (define deps '("scribble-lib"
                "base"))

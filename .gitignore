@@ -5,3 +5,8 @@
 *.swp
 compiled/
 doc/
+*.html
+*.js
+!splitflap-doc/js/*.js
+*.css
+!splitflap-doc/styles/*.css
