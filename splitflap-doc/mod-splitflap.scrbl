@@ -50,12 +50,16 @@ conveniently supplied by @racket[infer-moment], but you can use functions in the
 @racketmodname[gregor] library or any other library which return @racket[moment]s, such as
 @racket[parse-moment].
 
+You can optionally use the @racket[_media] argument to supply an @tech{enclosure}, but if you are
+generating a feed for a podcast you should consider using @racket[episode] and @racket[podcast]
+instead.
+
 }
 
 @defproc[(feed [id tag-uri?]
-                [site-url valid-url-string?]
-                [name xexpr?]
-                [entries (listof feed-item?)])
+               [site-url valid-url-string?]
+               [name xexpr?]
+               [entries (listof feed-item?)])
           feed?]{
 
 Returns a @racketresultfont{#<feed>} struct. You can inspect its contents with @racket[express-xml].
@@ -74,10 +78,9 @@ The most recent timestamp is also used as the feed’s own last-updated timestam
          (or/c string? txexpr? document? element?)]{
 
 Returns the expression of @racket[_data] in one of three forms, depending on @racket[_result-type]:
-a string of XML; a @racketlink[txexpr?]{tagged X-expression}; or an XML object. In the latter case,
-the result is an @racket[element] when @racket[_data] is a @racket[feed-item] or an
-@racket[episode], and a @racket[document] when @racket[_data] is a @racket[feed] or a
-@racket[podcast].
+a string of XML, a @racketlink[txexpr?]{tagged X-expression}, or an XML object. In the latter case,
+the result is a @racket[document] when @racket[_data] is a @racket[feed] or a @racket[podcast], and
+an @racket[element] otherwise.
 
 The @racket[_dialect] argument is ignored when @racket[_data] is an @racket[episode] or a
 @racket[podcast], since @AppleRequirements[] stipulate the use of RSS 2.0 for podcast feeds.
@@ -146,10 +149,9 @@ de facto standard for this application.
                   [#:block? block boolean? #f])
          episode?]{
 
-Returns a @racketresultfont{#<episode>} struct, which are required for @racket[podcast]s in the same
+Returns an @racketresultfont{#<episode>} struct, which is required for @racket[podcast]s in the same
 way that @racket[feed-item]s are required for @racket[feed]s. You can inspect its contents with
 @racket[express-xml].
-
 
 The value of @racket[_updated] must be identical to or after @racket[_published], taking time zone
 information into account, or an exception is raised. The values for these arguments can be most
@@ -208,7 +210,7 @@ Returns a @racketresultfont{#<podcast>} struct, which can be converted into a fe
 @racket[express-xml].
 
 Below are some notes about particular elements supplied to @racket[podcast]. The @spec{colored
-passages} indicate things which are required by Apple for inclusion in the iTunes podcast directory
+passages} indicate things which are required by Apple for inclusion in the Apple Podcasts directory
 but which are @emph{not} validated by Splitflap. (See @AppleRequirements[].)
 
 @itemlist[

@@ -20,19 +20,20 @@
 @defmodule[splitflap/constructs]
 
 The format of feeds is specified by the @Atom1.0[] and @RSS2.0[] specifications (and, for all
-practical purposes, by Apple’s podcast feed requirements in the case of podcasts). These in turn
-reference other RFCs to specify the format of many individual elements: timestamps, domain names,
-email addresses, people, identifiers, and languages.
+practical purposes, by @AppleRequirements[] in the case of podcasts). These in turn reference other
+RFCs to specify the format of many individual elements: timestamps, domain names, email addresses,
+people, identifiers, and languages.
 
 Splitflap makes heavy use of custom @seclink["contract-boundaries" #:doc '(lib
-"scribblings/guide/guide.scrbl")]{contracts} to conformity to the spec at every level. In cases
-where it makes things simpler, Splitflap is a bit @emph{more} strict than the actual spec.
+"scribblings/guide/guide.scrbl")]{contracts} to ensure conformity to the spec at every level. In
+cases where it makes things simpler, Splitflap is a bit @emph{more} strict than the actual spec.
 
 @section{Tag URIs}
 
 Feeds, and items contained in feeds, require some globally unique identifier. Although any kind of
 reasonably unique identifier can be used in a feed, Splitflap takes the unreasonably opinionated
-stance of allowing only @tech{tag URIs}.
+stance of allowing only @tech{tag URIs}, which are easy to create and read, and which can remain
+stable even if the resource’s URL changes.
 
 A @deftech{tag URI} is an identifier of the form
 @racketvalfont{@litchar{tag:}@italic{authority}@litchar{,}@italic{date}@litchar{:}@italic{specific}}.
@@ -42,7 +43,7 @@ a namespace. The @racket[_specific] is a string uniquely identifying a particula
 the tagging entity.
 
 The tag URI scheme is formalized in @hyperlink["https://datatracker.ietf.org/doc/html/rfc4151"]{RFC
-4151}, which also explains why tag URIs may be preferable to URLs, UUIDs, etc. for use in feeds.
+4151}.
 
 @defproc[(mint-tag-uri [authority (or/c dns-domain? email-address?)]
                        [date tag-entity-date?]
@@ -155,7 +156,7 @@ Converts @racket[_p] into a tagged X-expresssion using @racket[_entity] as enclo
 
 @defproc[(person? [v any/c]) boolean?]{
 
-Returns @racket[#t] when @racket[_v] is a @racket[person] struct.
+Returns @racket[#t] when @racket[_v] is a @racket[person] struct, @racket[#f] otherwise.
 
 }
 
