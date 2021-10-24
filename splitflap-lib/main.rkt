@@ -11,6 +11,8 @@
          racket/generic
          racket/match
          racket/promise
+         racket/runtime-path
+         setup/getinfo
          xml)
 
 (provide feed-language
@@ -45,7 +47,7 @@
        cache
        dialect
        (λ ()
-         (define gen-str (format "Racket v~a [~a]" (version) (system-type 'gc)))
+         (define gen-str (format "Racket v~a [~a] + splitflap v~a" (version) (system-type 'gc) (splitflap-version)))
          (case dialect
            [(rss) `(generator ,(string-append gen-str " (https://racket-lang.org)"))]
            [(atom) `(generator [[uri "https://racket-lang.org"] [version ,(version)]] ,gen-str)]))))))
@@ -282,3 +284,9 @@
         #:new-feed-url (or/c valid-url-string? #f))
        podcast?)
   (podcast_ id site-url name entries category image-url owner explicit? type block? complete? new-feed-url))
+
+;; Version
+(define-runtime-path lib-folder ".")
+
+(define (splitflap-version)
+  ((get-info/full lib-folder) 'version))
