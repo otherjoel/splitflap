@@ -40,6 +40,9 @@
 (define (rem . args)
   (apply racketcommentfont (cons "# " args)))
 
+(define (spec . args)
+  (element (style "special" (list (color-property (list #x66 #x33 #x99)))) args))
+
 (define-runtime-path flipboard-js "js/ticker-board.min.js")
 (define-runtime-path ticker-js "js/splitflap-ticker.js")
 

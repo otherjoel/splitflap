@@ -13,20 +13,26 @@ There are four simple steps to building a feed with this library:
 
 @section{Step 1: Mint a tag URI}
 
-Every feed needs a globally unique identifier, and this library requires you to use @tech{tag
-URIs} for this purpose. To mint a tag URI, you provide three things: a domain (or an email address);
-a date, and a specific identifier:
+Every feed needs a globally unique identifier, and this library requires you to use @tech{tag URIs}
+for this purpose. To mint a tag URI, you provide three things: a domain (or an email address); a
+date, and a specific identifier:
 
 @(examples
   #:eval tutorial
   #:label #false
   (define my-id (mint-tag-uri "my-domain.com" "2012" "blog")))
 
-See Tag URIs for more information on how they work.
+The idiomatic route is to create a tag URI for the entire feed, and then append to that URI to
+create tag URIs for the individual items in that feed.
+
+See @tech{Tag URIs} for more information.
 
 @section{Step 2: Create a list of items}
 
-Here’s a list with just one item in it:
+You’ll generally want to write a function that converts your item data from its original format into
+@racket[feed-item]s, and then create your list by mapping that function over each of the items.
+
+For this tutorial, we’ll manually make a list with just one @racket[feed-item] in it:
 
 @(examples
   #:eval tutorial
@@ -42,11 +48,10 @@ Here’s a list with just one item in it:
       (infer-moment "1912-06-21")                (code:comment @#,elem{updated date})
       '(article (p "My first post; content TK"))))))
 
-You’ll generally want to write a function that converts your item data from
-its original format into @racket[feed-item]s, and then create your list by mapping that function over
-each of the items.
 
 @section{Step 3: Create your feed}
+
+The @racket[feed] struct combines all the elements we’ve created so far:
 
 @(examples
   #:eval tutorial
@@ -60,8 +65,8 @@ each of the items.
 
 @section{Step 4: Generate the XML for your feed}
 
-Final step: pass your feed to @racket[express-xml] with either @racket['atom] or @racket['rss] and
-a URL for the feed itself.
+Final step: pass your feed to @racket[express-xml], specifying either the @racket['atom] or
+@racket['rss] format, and provide a URL where the feed itself will be accessible:
 
 @(examples
   #:eval tutorial
@@ -77,7 +82,8 @@ Let’s do one in RSS format, for kicks. Note the different URL for this version
   #:label #false
   (display (express-xml my-feed 'rss "https://rclib.org/feed.rss")))
 
-If you want the result as an X-expression, you can do that to, using the @racket[#:as] keyword argument:
+If you want the result as an X-expression, you can do that too, using the @racket[#:as] keyword
+argument:
 
 @(examples
   #:eval tutorial
