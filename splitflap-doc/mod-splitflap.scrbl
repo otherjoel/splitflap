@@ -42,11 +42,13 @@ inspect its contents with @racket[express-xml].
 The @racket[_id] argument must be a @tech{tag URI} obtained from @racket[mint-tag-uri] or
 @racket[append-specific].
 
-The@racket[_author] argument must be a @racket[person] struct.
+The @racket[_author] argument must be a @racket[person] struct.
 
-The values of @racket[_published] and @racket[_updated] can be most conveniently supplied by
-@racket[infer-moment]. You can also use functions in the @racketmodname[gregor] library which return
-@racket[moment]s, such as @racket[parse-moment].
+The value of @racket[_updated] must be identical to or after @racket[_published], taking time zone
+information into account, or an exception is raised. The values for these arguments can be most
+conveniently supplied by @racket[infer-moment], but you can use functions in the
+@racketmodname[gregor] library or any other library which return @racket[moment]s, such as
+@racket[parse-moment].
 
 }
 
@@ -145,15 +147,23 @@ de facto standard for this application.
          episode?]{
 
 Returns a @racketresultfont{#<episode>} struct, which are required for @racket[podcast]s in the same
-way that @racket[feed-item]s are required for @racket[feed]s.
+way that @racket[feed-item]s are required for @racket[feed]s. You can inspect its contents with
+@racket[express-xml].
 
-Below are some notes about particular elements supplied to @racket[episode]. The @spec{colored
-passages} indicate things which are required by Apple for inclusion in the iTunes podcast directory
+
+The value of @racket[_updated] must be identical to or after @racket[_published], taking time zone
+information into account, or an exception is raised. The values for these arguments can be most
+conveniently supplied by @racket[infer-moment], but you can use functions in the
+@racketmodname[gregor] library or any other library which return @racket[moment]s, such as
+@racket[parse-moment].
+
+Below are further notes about particular elements supplied to @racket[episode]. The @spec{colored
+passages} indicate things which are required by Apple for inclusion in the Apple Podcasts directory
 but which are @emph{not} validated by Splitflap. (See @AppleRequirements[].)
 
 @itemlist[
 
-@item{The @racket[_title] should contain no markup, and @spec{should also not contain episode or season
+@item{The @racket[_title] should contain no markup, and @spec{should not contain episode or season
 number information (use @racket[#:episode-num] and @racket[#:season-num] for this instead)}.}
 
 @item{The @racket[#:image-url] is for episode-specific artwork. @spec{It must point to an image with
@@ -251,26 +261,25 @@ for moving your RSS feed}.}
 
 @defproc[(feed-item? [v any/c]) boolean?]{
 
-Returns @racket[#t] if @racket[_v] is a @racketresultfont{#<feed-item>} struct --- that is, the
-result of a call to @racket[feed-item].
+Returns @racket[#t] if @racket[_v] is a @racket[feed-item] struct, @racket[#f] otherwise.
 
 }
 
 @defproc[(feed? [v any/c]) boolean?]{
 
-Returns @racket[#t] if @racket[_v] is a @racket[feed] struct. 
+Returns @racket[#t] if @racket[_v] is a @racket[feed] struct, @racket[#f] otherwise. 
 
 }
 
 @defproc[(episode? [v any/c]) boolean?]{
 
-Returns @racket[#t] if @racket[_v] is an @racket[episode] struct.
+Returns @racket[#t] if @racket[_v] is an @racket[episode] struct, @racket[#f] otherwise.
 
 }
 
 @defproc[(podcast? [v any/c]) boolean?]{
 
-Returns @racket[#t] if @racket[_v] is a @racket[podcast] struct.
+Returns @racket[#t] if @racket[_v] is a @racket[podcast] struct, @racket[#f] otherwise.
 
 }
 
@@ -278,6 +287,4 @@ Returns @racket[#t] if @racket[_v] is a @racket[podcast] struct.
 
 Returns @racket[#t] when @racket[_v] is one of the struct types that implements the generic
 @racket[express-xml] function: @racket[enclosure], @racket[feed-item], @racket[feed],
-@racket[episode], or @racket[podcast].
-
-}
+@racket[episode], or @racket[podcast]; @racket[#f] otherwise}

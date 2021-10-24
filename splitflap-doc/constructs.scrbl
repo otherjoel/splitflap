@@ -35,10 +35,11 @@ reasonably unique identifier can be used in a feed, Splitflap takes the unreason
 stance of allowing only @tech{tag URIs}.
 
 A @deftech{tag URI} is an identifier of the form
-@racketresultfont{tag:@italic{authority},@italic{date}:@italic{specific}}.  The @racket[_authority]
-is a domain name (or email address) held by you as of @racket[_date]; together, the authority and
-the date form a unique @italic{tagging entity}, which acts kind of like a namespace. The
-@racket[_specific] is a string uniquely identifying a particular resource within the tagging entity.
+@racketvalfont{@litchar{tag:}@italic{authority}@litchar{,}@italic{date}@litchar{:}@italic{specific}}.
+The @racket[_authority] is a domain name (or email address) held by you as of @racket[_date];
+together, the authority and the date form a unique @italic{tagging entity}, which acts kind of like
+a namespace. The @racket[_specific] is a string uniquely identifying a particular resource within
+the tagging entity.
 
 The tag URI scheme is formalized in @hyperlink["https://datatracker.ietf.org/doc/html/rfc4151"]{RFC
 4151}, which also explains why tag URIs may be preferable to URLs, UUIDs, etc. for use in feeds.
@@ -66,7 +67,7 @@ characters are allowed here.
 
 @defproc[(tag-uri->string [tag tag-uri?]) non-empty-string?]{
 
-Converts a @racketresultfont{#<tag-uri>} into a string.
+Converts a @racketlink[mint-tag-uri]{@tt{tag-uri}} into a string.
 
 @examples[#:eval mod-constructs
           (define rclib-id (mint-tag-uri "rclib.org" "2012-04-01" "Marian'sBlog"))
@@ -106,8 +107,7 @@ acceptable date format for a @tech{tag URI} according to RFC 4151.
 
 Returns @racket[#t] if @racket[_str] is an acceptable string for the “specific” portion of a
 @tech{tag URI} as specified in RFC 4151: a string comprised only of the characters in the range
-@racketvalfont{a–z}, @racketvalfont{A–Z}, @racketvalfont{0–9} or in the set
-@racketvalfont{@tt{-._~!$&'()*+,;=:@"@"/?}}.
+@litchar{a–z}, @litchar{A–Z}, @litchar{0–9} or in the set @litchar{-._~!$&'()*+,;=:@"@"/?}.
 
 @examples[#:eval mod-constructs
           (tag-specific-string? "abcdABCD01923")
@@ -119,8 +119,7 @@ Returns @racket[#t] if @racket[_str] is an acceptable string for the “specific
 
 @defproc[(tag-uri? [v any/c]) boolean?]{
 
-Returns @racket[#t] when @racket[_v] is a struct of type @racketresultfont{#<tag-uri>} --- that is,
-a value returned from @racket[mint-tag-uri].
+Returns @racket[#t] when @racket[_v] is a @racketlink[mint-tag-uri]{@tt{tag-uri}} struct.
 
 }
 
@@ -212,7 +211,7 @@ a podcast episode.
 
 @defstruct[enclosure ([url valid-url-string?] 
                       [mime-type (or/c non-empty-string? #f)] 
-                      [size exact-nonnegative-integer?])]{
+                      [size exact-nonnegative-integer?]) #:omit-constructor]{
 
 A structure type for @tech{enclosures}.
 
@@ -250,15 +249,15 @@ according to @hyperlink["https://datatracker.ietf.org/doc/html/rfc1035"]{RFC 103
 
 @itemlist[
 
-@item{Must contain one or more @emph{labels} separated by @racketvalfont{.}}
+@item{Must contain one or more @emph{labels} separated by @litchar{.}}
 
-@item{Each label must consist of only the characters @racketvalfont{A–Z}, @racketvalfont{a–z},
-@racketvalfont{0–9}, or @racketvalfont{-}.}
+@item{Each label must consist of only the characters @litchar{A–Z}, @litchar{a–z}, @litchar{0–9}, or
+@litchar{-}.}
 
 @item{Labels may not start with a digit or a hyphen, and may not end in a hyphen.}
 
-@item{No individual label may be longer than 63 bytes, and the entire domain may not be longer than
-255 bytes.}
+@item{No individual label may be longer than 63 bytes (including an extra byte for a length header),
+and the entire domain may not be longer than 255 bytes.}
 
 ]
 
@@ -313,11 +312,10 @@ common-sense subset of RFC 5322:
 
 @itemlist[
 
-@item{Must be in the format @racketresultfont{@italic{local-part}@"@"@italic{domain}}}
+@item{Must be in the format @racketvalfont{@italic{local-part}@litchar{@"@"}@italic{domain}}}
 
-@item{The @racket[_local-part] must be no longer than 65 bytes and only include @racketvalfont{a–z},
-@racketvalfont{A–Z}, @racketvalfont{0–9}, or characters in the set
-@racketvalfont|{!#$%&'*+/=?^_‘{|}~-.}|.}
+@item{The @racket[_local-part] must be no longer than 65 bytes and only include @litchar{a–z},
+@litchar{A–Z}, @litchar{0–9}, or characters in the set @litchar|{!#$%&'*+/=?^_‘{|}~-.}|.}
 
 @item{The @racket[_domain] must be valid according to @racket[dns-domain?].}
 
