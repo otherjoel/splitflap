@@ -97,6 +97,9 @@
   (->* (tag-uri? valid-url-string? string? person? moment? moment? xexpr?)
        ((or/c enclosure? #f))
        feed-item?)
+  (unless (moment>=? updated published)
+    (raise-arguments-error 'feed-item "updated timestamp cannot come before published timestamp"
+                           "updated" updated "published" published))
   (feed-item_ id url title author published updated content media))
 
 (define (entry-newer? maybe-newer other)
@@ -205,6 +208,9 @@
         #:type (or/c 'trailer 'full 'bonus #f)
         #:block? boolean?)
        episode?)
+  (unless (moment>=? updated published)
+    (raise-arguments-error 'feed-item "updated timestamp cannot come before published timestamp"
+                           "updated" updated "published" published))
   (episode_ id url title author published updated content media
             duration image-url explicit? episode-n season-n type block?))
 

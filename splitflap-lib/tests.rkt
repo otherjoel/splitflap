@@ -3,7 +3,6 @@
 ;; Unit tests
 
 (require "main.rkt"
-         gregor
          racket/format
          rackunit)
 
@@ -37,6 +36,18 @@
 </entry>})
 
 (check-equal? (express-xml e1 'atom) expect-atom)
+
+;; Updated time occurring before published time results in exception
+(check-exn
+ exn:fail:contract?
+ (λ () (feed-item (append-specific site-id "one")
+                "https://example.com/blog/one.html"
+                "Kate's First Post"
+                (person "Kate Poster" "kate@example.com")
+                (infer-moment "2007-03-17")
+                (infer-moment "2007-03-16")
+                `(div (p "Welcome to my blog.") (ul (li "& ' < > © ℗ ™")))
+                (enclosure "gopher://umn.edu/greeting.m4a" "audio/x-m4a" 1234))))
 
 (check-exn exn:fail:contract? (λ () (feed site-id "not a url" "Title" (list e1))))
   
