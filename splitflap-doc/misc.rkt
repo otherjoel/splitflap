@@ -1,4 +1,4 @@
-#lang racket/base
+#lang at-exp racket/base
 
 (require racket/runtime-path
          scribble/core
@@ -44,9 +44,8 @@
   (element (style "special" (list (color-property (list #x66 #x33 #x99)))) args))
 
 (define-runtime-path flipboard-js "js/ticker-board.min.js")
-(define-runtime-path ticker-js "js/splitflap-ticker.js")
 
-(define flipboard
+(define flipboard-div
   (paragraph
    (style "flipboard"
           (list 'div
@@ -55,3 +54,15 @@
                 (tex-addition flappy-tex)
                 (attributes '((id . "flappy")))))
    (list (elem ""))))
+
+(define flipboard-script
+  @(paragraph
+    (style "flip-js" (list (alt-tag "script")))
+    (list @literal|{
+          new RotationBoard(document.getElementById('flappy'), {
+          messages: ['splitflap', 'XML Feeds'],
+          count: 1,
+          size: 9,
+          delay: 6000,
+          })
+          }|)))

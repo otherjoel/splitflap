@@ -7,11 +7,8 @@
 @title[#:style 'toc]{Splitflap: Atom and RSS Feeds}
 @author[(author+email "Joel Dueck" "joel@jdueck.net")]
 
-@flipboard
-
-@(paragraph
-  (style "flip-js" (list (alt-tag "script") (attributes `((src . ,(path->string ticker-js))))))
-  (list (elem " ")))
+@flipboard-div
+@flipboard-script
 
 @defmodule[splitflap]
 
