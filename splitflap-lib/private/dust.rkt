@@ -83,7 +83,7 @@
 ;; are direct children of an element whose ‘type’ attribute is “text”
 (define (pre-escape x)
   (cond 
-    [(and (txexpr? x) (eq? "text" (attr-ref x 'type #f)))
+    [(and (txexpr? x) (equal? "text" (attr-ref x 'type #f)))
      (txexpr
       (car x)
       (get-attrs x)
