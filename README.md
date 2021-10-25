@@ -1,4 +1,4 @@
-# `splitflap`
+# `splitflap` [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
 🔖⚛️ RSS / Atom feed generation library for Racket. **Still in progress**
 
