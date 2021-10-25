@@ -36,10 +36,8 @@ complete. There are some wrinkles to iron out. Please report any problems on
 
 Or using DrRacket: click the @onscreen{File} menu → @onscreen{Install Package …}.
 
-@bold{Source and license:} The source code for this library is
-@hyperlink["https://github.com/otherjoel/splitflap"]{on GitHub}, and is provided under the terms
-of the @hyperlink["https://github.com/otherjoel/splitflap/blob/main/LICENSE.md"]{Blue Oak 1.0.0
-license}.
+The source code for this library is provided @hyperlink["https://github.com/otherjoel/splitflap"]{on
+GitHub}.
 
 @local-table-of-contents[]
 

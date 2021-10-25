@@ -16,8 +16,10 @@
 
 (define (AppleRequirements . x)
   (apply hyperlink "https://podcasters.apple.com/support/823-podcast-requirements"
-         (if (null? x) '("Apple Podcast feed requirements") x)))
+         (if (null? x) '("Apple’s Podcast feed requirements") x)))
 
+(define (W3CFeedValidator . x)
+  (apply hyperlink "https://validator.w3.org/feed/" (if (null? x) '("W3C Feed Validator") x)))
 
 (define-runtime-path aux-css "styles/terminal.css")
 (define-runtime-path aux-tex "styles/terminal.tex")

@@ -26,6 +26,11 @@ over which format was superior and it was necessary to supply both in order to a
 with the most clients. These days almost every client supports both, so you probably only need to
 supply one.
 
+You should run all your feeds through the @W3CFeedValidator[]. Please
+@hyperlink["https://github.com/otherjoel/splitflap/issues"]{file an issue} should you
+encounter any validation errors in feeds created with Splitflap.
+
+
 @defproc[(feed-item [id tag-uri?]
                     [url valid-url-string?]
                     [title string?]
