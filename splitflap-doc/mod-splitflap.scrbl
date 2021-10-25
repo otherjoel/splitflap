@@ -51,9 +51,8 @@ The @racket[_author] argument must be a @racket[person] struct.
 
 The value of @racket[_updated] must be identical to or after @racket[_published], taking time zone
 information into account, or an exception is raised. The values for these arguments can be most
-conveniently supplied by @racket[infer-moment], but you can use functions in the
-@racketmodname[gregor] library or any other library which return @racket[moment]s, such as
-@racket[parse-moment].
+conveniently supplied by @racket[infer-moment], but any moment-producing method will work, such as
+constructing @racket[moment]s directly, parsing strings with @racket[parse-moment], etc.
 
 You can optionally use the @racket[_media] argument to supply an @tech{enclosure}, but if you are
 generating a feed for a podcast you should consider using @racket[episode] and @racket[podcast]
@@ -160,9 +159,8 @@ way that @racket[feed-item]s are required for @racket[feed]s. You can inspect it
 
 The value of @racket[_updated] must be identical to or after @racket[_published], taking time zone
 information into account, or an exception is raised. The values for these arguments can be most
-conveniently supplied by @racket[infer-moment], but you can use functions in the
-@racketmodname[gregor] library or any other library which return @racket[moment]s, such as
-@racket[parse-moment].
+conveniently supplied by @racket[infer-moment], but any moment-producing method will work, such as
+constructing @racket[moment]s directly, parsing strings with @racket[parse-moment], etc.
 
 Below are further notes about particular elements supplied to @racket[episode]. The @spec{colored
 passages} indicate things which are required by Apple for inclusion in the Apple Podcasts directory

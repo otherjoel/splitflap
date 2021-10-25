@@ -230,6 +230,8 @@ Returns an @racket[enclosure] for @racket[_file], with a MIME type matching the 
 it can be determined), the URL set to @racket[_file] appended onto @racket[_base-url], and the
 length set to the file’s actual length in bytes.
 
+This procedure accesses the filesystem; if @racket[_file] does not exist, an exception is raised.
+
 @examples[#:eval mod-constructs
           (code:comment @#,elem{Make a temporary file})
           (define audio-file (make-temporary-file "audio-~a.m4a"))
