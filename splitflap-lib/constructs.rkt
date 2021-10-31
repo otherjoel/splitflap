@@ -103,10 +103,10 @@
                    "." longest-valid-label ; 252
                    ".aa"))               ; 255 bytes
   
-  (check-true (dns-domain? "joeldueck.com"))
-  (check-true (dns-domain? "joeldueck.com"))
-  (check-true (dns-domain? "joel-dueck.com"))
-  (check-true (dns-domain? "ALLCAPS.COM"))
+  (check-true (dns-domain? "example.com"))
+  (check-true (dns-domain? "example.com"))
+  (check-true (dns-domain? "ex-ample.com"))
+  (check-true (dns-domain? "EXAMPLE.COM"))
   (check-true (dns-domain? "a12-345.b6-78"))
   (check-true (dns-domain? "a"))
   (check-true (dns-domain? "a.b.c.d.e.f.g.h"))
@@ -114,11 +114,11 @@
   (check-true (dns-domain? (string-append longest-valid-label ".com")))
   (check-true (dns-domain? longest-valid-domain))
   
-  (check-false (dns-domain? " joeldueck.com")) ; leading space
-  (check-false (dns-domain? "joeldueck.com ")) ; trailing space
-  (check-false (dns-domain? "joel dueck.com")) ; internal space
-  (check-false (dns-domain? "joeldueck-.com")) ; label ending in hyphen
-  (check-false (dns-domain? "joeldueck.com-")) ; another
+  (check-false (dns-domain? " example.com")) ; leading space
+  (check-false (dns-domain? "example.com ")) ; trailing space
+  (check-false (dns-domain? "ex ample.com")) ; internal space
+  (check-false (dns-domain? "example-.com")) ; label ending in hyphen
+  (check-false (dns-domain? "example.com-")) ; another
   (check-false (dns-domain? "12345.b"))        ; label starting with number
   (check-false (dns-domain? "a12345.678"))     ; another
   (check-false (dns-domain? (string-append longest-valid-label "a")))
@@ -201,16 +201,16 @@
            #t))))
 
 (module+ test
-  (check-true (valid-url-string? "https://joeldueck.com"))
-  (check-true (valid-url-string? "ftp://joeldueck.com"))          ; FTP scheme
-  (check-true (valid-url-string? "gonzo://joeldueck.com"))        ; scheme need not be registered
-  (check-true (valid-url-string? "https://user:p@joeldueck.com")) ; includes user/password
-  (check-true (valid-url-string? "https://joeldueck.com:8080"))   ; includes port
+  (check-true (valid-url-string? "https://example.com"))
+  (check-true (valid-url-string? "ftp://example.com"))          ; FTP scheme
+  (check-true (valid-url-string? "gonzo://example.com"))        ; scheme need not be registered
+  (check-true (valid-url-string? "https://user:p@example.com")) ; includes user/password
+  (check-true (valid-url-string? "https://example.com:8080"))   ; includes port
   (check-true (valid-url-string? "file://C:\\home\\user?q=me"))   ; OK whatever
 
   ;; Things that are valid URIs but not valid URLs
   (check-false (valid-url-string? "news:comp.servers.unix")) ; no host given, only path
-  (check-false (valid-url-string? "http://joel dueck.com"))  ; domain not RFC 1035 compliant
+  (check-false (valid-url-string? "http://ex ample.com"))  ; domain not RFC 1035 compliant
 
   ;; Things that are actually valid URLs but I say nuh-uh, not for using in feeds
   (check-false (valid-url-string? "ldap://[2001:db8::7]/c=GB?objectClass?one"))
@@ -334,14 +334,14 @@
      (txexpr entity '() (list (format "~a (~a)" email name)))]))
   
 (module+ test
-  (define joel (make-person "Joel" "joel@msn.com"))
+  (define joel (make-person "Joel" "joel@example.com"))
   (check-true (person? joel))
-  (check-equal? (person->xexpr joel 'author 'rss) '(author "joel@msn.com (Joel)"))
-  (check-equal? (person->xexpr joel 'author 'atom) '(author (name "Joel") (email "joel@msn.com")))
+  (check-equal? (person->xexpr joel 'author 'rss) '(author "joel@example.com (Joel)"))
+  (check-equal? (person->xexpr joel 'author 'atom) '(author (name "Joel") (email "joel@example.com")))
 
   ;; Prefixing child elements
   (check-equal? (person->xexpr joel 'itunes:owner 'itunes)
-                '(itunes:owner (itunes:name "Joel") (itunes:email "joel@msn.com"))))
+                '(itunes:owner (itunes:name "Joel") (itunes:email "joel@example.com"))))
 
 ;; ~~ MIME types ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -400,38 +400,38 @@
 (module+ test
   (require racket/file)
   (check-exn exn:fail:contract? (λ () (enclosure "invalid-url" "audio/x-m4a" 1234)))
-  (check-exn exn:fail:contract? (λ () (enclosure "http://d.com/f.e" -900 1234)))
-  (check-exn exn:fail:contract? (λ () (enclosure "http://d.com/f.e" "audio/x-m4a" -1)))
+  (check-exn exn:fail:contract? (λ () (enclosure "http://example.com/f.e" -900 1234)))
+  (check-exn exn:fail:contract? (λ () (enclosure "http://example.com/f.e" "audio/x-m4a" -1)))
 
   (define test-enc
-    (enclosure "gopher://umn.edu/greeting.m4a" "audio/x-m4a" 1234))
+    (enclosure "gopher://example.com/greeting.m4a" "audio/x-m4a" 1234))
 
   (check-txexprs-equal?
    (express-xml test-enc 'atom #:as 'xexpr)
    '(link [[rel "enclosure"]
-           [href "gopher://umn.edu/greeting.m4a"]
+           [href "gopher://example.com/greeting.m4a"]
            [length "1234"]
            [type "audio/x-m4a"]]))
   
   (check-txexprs-equal?
    (express-xml test-enc 'rss #:as 'xexpr)
-   '(enclosure [[url "gopher://umn.edu/greeting.m4a"]
+   '(enclosure [[url "gopher://example.com/greeting.m4a"]
                 [length "1234"]
                 [type "audio/x-m4a"]]))
 
   ;; Enclosure with unknown type
   (define test-enc2
-    (enclosure "gopher://umn.edu/greeting.m4a" #f 1234))
+    (enclosure "gopher://example.com/greeting.m4a" #f 1234))
   
   (check-txexprs-equal?
    (express-xml test-enc2 'atom #:as 'xexpr)
    '(link [[rel "enclosure"]
-           [href "gopher://umn.edu/greeting.m4a"]
+           [href "gopher://example.com/greeting.m4a"]
            [length "1234"]]))
   
   (check-txexprs-equal?
    (express-xml test-enc2 'rss  #:as 'xexpr)
-   '(enclosure [[url "gopher://umn.edu/greeting.m4a"]
+   '(enclosure [[url "gopher://example.com/greeting.m4a"]
                 [length "1234"]])))
 
 ;; Convenient way to make an enclosure if you have an existing file
