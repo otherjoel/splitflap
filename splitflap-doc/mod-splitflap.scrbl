@@ -146,11 +146,11 @@ de facto standard for this application.
                   [media enclosure?]
                   [#:duration duration (or/c exact-nonnegative-integer? #f) #f]
                   [#:image-url image-url (or/c valid-url-string? #f) #f]
-                  [#:explicit? explicit (or/c boolean? '_) '_]
+                  [#:explicit? explicit any/c null]
                   [#:episode-num ep-num (or/c exact-nonnegative-integer? #f) #f]
                   [#:season-num s-num (or/c exact-nonnegative-integer? #f) #f]
                   [#:type type (or/c 'trailer 'full 'bonus #f) #f]
-                  [#:block? block boolean? #f])
+                  [#:block? block any/c #f])
          episode?]{
 
 Returns an @racketresultfont{#<episode>} struct, which is required for @racket[podcast]s in the same
@@ -180,6 +180,11 @@ artwork requirements} for other requirements.}
 @item{The @racket[#:duration] gives the episode’s duration in seconds, and is @spec{optional but
 recommended}.}
 
+@item{If @racket[_explicit] is an optional override of the mandatory feed-level parental advisory
+flag in @racket[podcast]. If it is @racket[_null] (the default), the episode will not contain any
+parental advisory information. @spec{If it is @racket[#f], Apple Podcasts will mark the episode as
+“Clean”. If it is any other value, Apple Podcasts will mark the episode as “Explicit”.}
+
 @item{The @racket[#:episode-num] is optional, but @spec{Apple will require it if the
 @racket[podcast] has a type of @racket['episodic].}}
 
@@ -202,10 +207,10 @@ its content would otherwise cause the entire podcast to be removed from Apple Po
                   [category (or/c string? (list/c string? string?))]
                   [image-url valid-url-string?]
                   [owner person?]
-                  [explicit boolean?]
+                  [#:explicit? explicit any/c]
                   [#:type type (or/c 'serial 'episodic #f) #f]
-                  [#:block? block boolean? #f]
-                  [#:complete? complete boolean? #f]
+                  [#:block? block any/c #f]
+                  [#:complete? complete any/c #f]
                   [#:new-feed-url new-url (or/c valid-url-string? #f) #f])
          podcast?]{
 

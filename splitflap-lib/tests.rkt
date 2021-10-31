@@ -109,3 +109,75 @@
                [feed-language 'en])
   (check-equal? (express-xml f1 'atom "https://example.com/feed.atom") expect-feed-atom)
   (check-equal? (express-xml f1 'rss "https://example.com/feed.rss") expect-feed-rss))
+
+(define test-ep1
+  (parameterize ([current-timezone 0])
+  (episode (append-specific site-id "ep1")
+           "http://example.com/ep1"
+           "Kate Speaks"
+           (person "Kate Poster" "kate@example.com")
+           (infer-moment "2021-10-31")
+           (infer-moment "2021-10-31")
+           `(article (p "Welcome to the show"))
+          (enclosure "http://example.com/ep1.m4a" "audio/x-m4a" 1234)
+           )))
+
+(define expect-ep1 @~a{
+<item>
+  <title>Kate Speaks</title>
+  <link>http://example.com/ep1</link>
+  <pubDate>Sun, 31 Oct 2021 00:00:00 +0000</pubDate>
+  <enclosure url="http://example.com/ep1.m4a" length="1234" type="audio/x-m4a" />
+  <author>kate@"@"example.com (Kate Poster)</author>
+  <guid isPermaLink="false">tag:example.com,2007:blog.ep1</guid>
+  <description>
+    <![CDATA[<article><p>Welcome to the show</p></article>]]>
+  </description>
+</item>
+})
+
+(check-equal? expect-ep1 (express-xml test-ep1 'rss))
+(check-equal? expect-ep1 (express-xml test-ep1 'atom)) ; ignores dialect
+                                        ;
+(define test-ep2
+  (parameterize ([current-timezone 0])
+  (episode (append-specific site-id "ep2")
+           "http://example.com/ep2"
+           "Kate Speaks"
+           (person "Kate Poster" "kate@example.com")
+           (infer-moment "2021-10-31")
+           (infer-moment "2021-10-31")
+           `(article (p "Welcome to another show"))
+          (enclosure "http://example.com/ep2.m4a" "audio/x-m4a" 1234)
+          #:duration 300
+          #:image-url "http://example.com/ep1-cover.png"
+          #:explicit? (even? 7)
+          #:episode-num 2
+          #:season-num 1
+          #:type 'full
+          #:block? (< 3 17 99)
+           )))
+
+(define expect-ep2 @~a{
+<item>
+  <title>Kate Speaks</title>
+  <link>http://example.com/ep2</link>
+  <pubDate>Sun, 31 Oct 2021 00:00:00 +0000</pubDate>
+  <enclosure url="http://example.com/ep2.m4a" length="1234" type="audio/x-m4a" />
+  <itunes:episodeType>full</itunes:episodeType>
+  <author>kate@"@"example.com (Kate Poster)</author>
+  <guid isPermaLink="false">tag:example.com,2007:blog.ep2</guid>
+  <description>
+    <![CDATA[<article><p>Welcome to another show</p></article>]]>
+  </description>
+  <itunes:duration>300</itunes:duration>
+  <itunes:explicit>false</itunes:explicit>
+  <itunes:image href="http://example.com/ep1-cover.png" />
+  <itunes:episode>2</itunes:episode>
+  <itunes:season>1</itunes:season>
+  <itunes:block>Yes</itunes:block>
+</item>
+})
+
+(check-equal? expect-ep2 (express-xml test-ep2 'rss))
+(check-equal? expect-ep2 (express-xml test-ep2 'atom)) ; ignores dialect

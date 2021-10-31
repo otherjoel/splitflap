@@ -9,6 +9,7 @@
                      racket/contract
                      racket/file
                      racket/promise
+                     racket/string
                      splitflap
                      txexpr))
 
