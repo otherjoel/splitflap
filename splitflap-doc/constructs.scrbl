@@ -380,8 +380,8 @@ Returns @racket[#t] if @racket[_v] is a two-character lowercase symbol matching 
 
 }
 
-@defproc[(language-codes) (listof iso-639-language-code?)]{
+@defthing[language-codes (listof iso-639-language-code?)]{
 
-Returns a list of symbols that qualify as @racket[iso-639-language-code?].
+A list of symbols that qualify as @racket[iso-639-language-code?].
 
 }

@@ -183,7 +183,7 @@ recommended}.}
 @item{If @racket[_explicit] is an optional override of the mandatory feed-level parental advisory
 flag in @racket[podcast]. If it is @racket[_null] (the default), the episode will not contain any
 parental advisory information. @spec{If it is @racket[#f], Apple Podcasts will mark the episode as
-“Clean”. If it is any other value, Apple Podcasts will mark the episode as “Explicit”.}
+“Clean”. If it is any other value, Apple Podcasts will mark the episode as “Explicit”.}}
 
 @item{The @racket[#:episode-num] is optional, but @spec{Apple will require it if the
 @racket[podcast] has a type of @racket['episodic].}}
