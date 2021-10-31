@@ -101,10 +101,10 @@ system-language)] is used.
 
 @examples[#:eval mod-feed
           (define item
-            (feed-item (mint-tag-uri "rclib.org" "2012-06" "blog:example-post")
-                       "http://rclib.org/example-post.html"
+            (feed-item (mint-tag-uri "rclib.example.com" "2012-06" "blog:example-post")
+                       "http://rclib.example.com"
                        "Example"
-                       (person "Marion Paroo" "marion@rclib.org")
+                       (person "Marion Paroo" "marion@rclib.example.com")
                        (infer-moment "2013-04-13 08:45")
                        (infer-moment "2013-04-14")
                        '(article (p "Etc…"))))
@@ -132,7 +132,7 @@ A parameter that, when not set to @racket[#f], is used by @racket[express-xml] a
 
 @section{Podcasts}
 
-Splitflap provides some special data types for podcast feeds: @racket[epsisode] and
+Splitflap provides some special data types for podcast feeds: @racket[episode] and
 @racket[podcast]. These are patterned after @AppleRequirements[] since those serve as a kind of
 de facto standard for this application.
 
@@ -236,10 +236,10 @@ in Apple’s podcast listings.}
 
 @itemlist[
 
-@item{Use @racket['episodic] when episodes are not
-intended to be consumed in any particular order: @spec{in this case, Apple Podcasts will present
-newest episodes first. (If organized into seasons, the newest season will be presented first;
-otherwise, episodes will be grouped by year published, newest first.)}}
+@item{Use @racket['episodic] when episodes are not intended to be consumed in any particular order:
+@spec{in this case, Apple Podcasts will present newest episodes first. (If organized into seasons,
+the newest season will be presented first; otherwise, episodes will be grouped by year published,
+newest first.)}}
 
 @item{Use @racket['serial] when
 episodes are intended to be consumed in sequential order: @spec{in this case, Apple Podcasts will
