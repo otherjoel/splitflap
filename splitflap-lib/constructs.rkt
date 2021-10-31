@@ -35,7 +35,6 @@
          (rename-out [make-person person])
          person->xexpr
          ; Moments
-         feed-timezone
          infer-moment
          moment->string
          ; Enclosures
@@ -290,14 +289,6 @@
 
 ;; ~~ Dates ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-(define feed-timezone
-  (make-parameter
-   #f
-   (λ (v)
-     (unless (or (tz/c v) (not v))
-       (raise-argument-error 'feed-timezone "an IANA time zone identifier, UTC offset in seconds, or #false" v))
-     v)))
-
 (define (n: v) (cond [(not v) 0] [(string? v) (string->number v)] [else v]))
 
 (define/contract (infer-moment str)
@@ -306,8 +297,7 @@
     #px"^([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])(?:\\s+([01]?[0-9]|2[0-3]):([0-5][0-9])(?::([0-5][0-9]|60))?)?")
   (match str
     [(pregexp date/time-regex (list _ y m d hr min sec))
-     (parameterize ([current-timezone (or (feed-timezone) (current-timezone))])
-       (moment (n: y) (n: m) (n: d) (n: hr) (n: min) (n: sec) 0))]
+       (moment (n: y) (n: m) (n: d) (n: hr) (n: min) (n: sec) 0)]
     [_ (raise-argument-error 'Date "string in the format ‘YYYY-MM-DD [hh:mm[:ss]]’" str)]))
 
 (define/contract (moment->string m type)

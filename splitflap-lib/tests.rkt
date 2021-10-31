@@ -3,12 +3,13 @@
 ;; Unit tests
 
 (require "main.rkt"
+         gregor
          racket/format
          rackunit)
 
 (define site-id (mint-tag-uri "example.com" "2007" "blog"))
 (define e1
-  (parameterize ([feed-timezone 0])
+  (parameterize ([current-timezone 0])
     (feed-item (append-specific site-id "one")
                 "https://example.com/blog/one.html"
                 "Kate's First Post"
