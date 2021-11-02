@@ -35,7 +35,6 @@
          (rename-out [make-person person])
          person->xexpr
          ; Moments
-         feed-timezone
          infer-moment
          moment->string
          ; Enclosures
@@ -104,10 +103,10 @@
                    "." longest-valid-label ; 252
                    ".aa"))               ; 255 bytes
   
-  (check-true (dns-domain? "joeldueck.com"))
-  (check-true (dns-domain? "joeldueck.com"))
-  (check-true (dns-domain? "joel-dueck.com"))
-  (check-true (dns-domain? "ALLCAPS.COM"))
+  (check-true (dns-domain? "example.com"))
+  (check-true (dns-domain? "example.com"))
+  (check-true (dns-domain? "ex-ample.com"))
+  (check-true (dns-domain? "EXAMPLE.COM"))
   (check-true (dns-domain? "a12-345.b6-78"))
   (check-true (dns-domain? "a"))
   (check-true (dns-domain? "a.b.c.d.e.f.g.h"))
@@ -115,11 +114,11 @@
   (check-true (dns-domain? (string-append longest-valid-label ".com")))
   (check-true (dns-domain? longest-valid-domain))
   
-  (check-false (dns-domain? " joeldueck.com")) ; leading space
-  (check-false (dns-domain? "joeldueck.com ")) ; trailing space
-  (check-false (dns-domain? "joel dueck.com")) ; internal space
-  (check-false (dns-domain? "joeldueck-.com")) ; label ending in hyphen
-  (check-false (dns-domain? "joeldueck.com-")) ; another
+  (check-false (dns-domain? " example.com")) ; leading space
+  (check-false (dns-domain? "example.com ")) ; trailing space
+  (check-false (dns-domain? "ex ample.com")) ; internal space
+  (check-false (dns-domain? "example-.com")) ; label ending in hyphen
+  (check-false (dns-domain? "example.com-")) ; another
   (check-false (dns-domain? "12345.b"))        ; label starting with number
   (check-false (dns-domain? "a12345.678"))     ; another
   (check-false (dns-domain? (string-append longest-valid-label "a")))
@@ -202,16 +201,16 @@
            #t))))
 
 (module+ test
-  (check-true (valid-url-string? "https://joeldueck.com"))
-  (check-true (valid-url-string? "ftp://joeldueck.com"))          ; FTP scheme
-  (check-true (valid-url-string? "gonzo://joeldueck.com"))        ; scheme need not be registered
-  (check-true (valid-url-string? "https://user:p@joeldueck.com")) ; includes user/password
-  (check-true (valid-url-string? "https://joeldueck.com:8080"))   ; includes port
+  (check-true (valid-url-string? "https://example.com"))
+  (check-true (valid-url-string? "ftp://example.com"))          ; FTP scheme
+  (check-true (valid-url-string? "gonzo://example.com"))        ; scheme need not be registered
+  (check-true (valid-url-string? "https://user:p@example.com")) ; includes user/password
+  (check-true (valid-url-string? "https://example.com:8080"))   ; includes port
   (check-true (valid-url-string? "file://C:\\home\\user?q=me"))   ; OK whatever
 
   ;; Things that are valid URIs but not valid URLs
   (check-false (valid-url-string? "news:comp.servers.unix")) ; no host given, only path
-  (check-false (valid-url-string? "http://joel dueck.com"))  ; domain not RFC 1035 compliant
+  (check-false (valid-url-string? "http://ex ample.com"))  ; domain not RFC 1035 compliant
 
   ;; Things that are actually valid URLs but I say nuh-uh, not for using in feeds
   (check-false (valid-url-string? "ldap://[2001:db8::7]/c=GB?objectClass?one"))
@@ -290,14 +289,6 @@
 
 ;; ~~ Dates ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-(define feed-timezone
-  (make-parameter
-   #f
-   (λ (v)
-     (unless (or (tz/c v) (not v))
-       (raise-argument-error 'feed-timezone "an IANA time zone identifier, UTC offset in seconds, or #false" v))
-     v)))
-
 (define (n: v) (cond [(not v) 0] [(string? v) (string->number v)] [else v]))
 
 (define/contract (infer-moment str)
@@ -306,8 +297,7 @@
     #px"^([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])(?:\\s+([01]?[0-9]|2[0-3]):([0-5][0-9])(?::([0-5][0-9]|60))?)?")
   (match str
     [(pregexp date/time-regex (list _ y m d hr min sec))
-     (parameterize ([current-timezone (or (feed-timezone) (current-timezone))])
-       (moment (n: y) (n: m) (n: d) (n: hr) (n: min) (n: sec) 0))]
+       (moment (n: y) (n: m) (n: d) (n: hr) (n: min) (n: sec) 0)]
     [_ (raise-argument-error 'Date "string in the format ‘YYYY-MM-DD [hh:mm[:ss]]’" str)]))
 
 (define/contract (moment->string m type)
@@ -344,14 +334,14 @@
      (txexpr entity '() (list (format "~a (~a)" email name)))]))
   
 (module+ test
-  (define joel (make-person "Joel" "joel@msn.com"))
+  (define joel (make-person "Joel" "joel@example.com"))
   (check-true (person? joel))
-  (check-equal? (person->xexpr joel 'author 'rss) '(author "joel@msn.com (Joel)"))
-  (check-equal? (person->xexpr joel 'author 'atom) '(author (name "Joel") (email "joel@msn.com")))
+  (check-equal? (person->xexpr joel 'author 'rss) '(author "joel@example.com (Joel)"))
+  (check-equal? (person->xexpr joel 'author 'atom) '(author (name "Joel") (email "joel@example.com")))
 
   ;; Prefixing child elements
   (check-equal? (person->xexpr joel 'itunes:owner 'itunes)
-                '(itunes:owner (itunes:name "Joel") (itunes:email "joel@msn.com"))))
+                '(itunes:owner (itunes:name "Joel") (itunes:email "joel@example.com"))))
 
 ;; ~~ MIME types ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -410,38 +400,38 @@
 (module+ test
   (require racket/file)
   (check-exn exn:fail:contract? (λ () (enclosure "invalid-url" "audio/x-m4a" 1234)))
-  (check-exn exn:fail:contract? (λ () (enclosure "http://d.com/f.e" -900 1234)))
-  (check-exn exn:fail:contract? (λ () (enclosure "http://d.com/f.e" "audio/x-m4a" -1)))
+  (check-exn exn:fail:contract? (λ () (enclosure "http://example.com/f.e" -900 1234)))
+  (check-exn exn:fail:contract? (λ () (enclosure "http://example.com/f.e" "audio/x-m4a" -1)))
 
   (define test-enc
-    (enclosure "gopher://umn.edu/greeting.m4a" "audio/x-m4a" 1234))
+    (enclosure "gopher://example.com/greeting.m4a" "audio/x-m4a" 1234))
 
   (check-txexprs-equal?
    (express-xml test-enc 'atom #:as 'xexpr)
    '(link [[rel "enclosure"]
-           [href "gopher://umn.edu/greeting.m4a"]
+           [href "gopher://example.com/greeting.m4a"]
            [length "1234"]
            [type "audio/x-m4a"]]))
   
   (check-txexprs-equal?
    (express-xml test-enc 'rss #:as 'xexpr)
-   '(enclosure [[url "gopher://umn.edu/greeting.m4a"]
+   '(enclosure [[url "gopher://example.com/greeting.m4a"]
                 [length "1234"]
                 [type "audio/x-m4a"]]))
 
   ;; Enclosure with unknown type
   (define test-enc2
-    (enclosure "gopher://umn.edu/greeting.m4a" #f 1234))
+    (enclosure "gopher://example.com/greeting.m4a" #f 1234))
   
   (check-txexprs-equal?
    (express-xml test-enc2 'atom #:as 'xexpr)
    '(link [[rel "enclosure"]
-           [href "gopher://umn.edu/greeting.m4a"]
+           [href "gopher://example.com/greeting.m4a"]
            [length "1234"]]))
   
   (check-txexprs-equal?
    (express-xml test-enc2 'rss  #:as 'xexpr)
-   '(enclosure [[url "gopher://umn.edu/greeting.m4a"]
+   '(enclosure [[url "gopher://example.com/greeting.m4a"]
                 [length "1234"]])))
 
 ;; Convenient way to make an enclosure if you have an existing file
@@ -456,15 +446,15 @@
 
 ;; ~~ ISO 639 Language codes ~~~~~~~~~~~~~~~~~~~~~
 
-(define (language-codes)
+(define language-codes
   '(ab aa af ak sq am ar an hy as av ae ay az bm ba eu be bn bh bi bs br bg my ca km ch ce ny zh cu cv kw co cr hr cs da dv nl dz en eo et ee fo fj fi fr ff gd gl lg ka de ki el kl gn gu ht ha he hz hi ho hu is io ig id ia ie iu ik ga it ja jv kn kr ks kk rw kv kg ko kj ku ky lo la lv lb li ln lt lu mk mg ms ml mt gv mi mr mh ro mn na nv nd ng ne se no nb nn ii oc oj or om os pi pa ps fa pl pt qu rm rn ru sm sg sa sc sr sn sd si sk sl so st nr es su sw ss sv tl ty tg ta tt te th bo ti to ts tn tr tk tw ug uk ur uz ve vi vo wa cy fy wo xh yi yo za zu))
 
 (define-explained-contract (iso-639-language-code? v)
   "ISO 639 language code symbol"
-  (and (symbol? v) (memq v (language-codes)) #t))
+  (and (symbol? v) (memq v language-codes) #t))
 
 (define/contract system-language (promise/c iso-639-language-code?)
-  (delay
+  (delay/sync
     (match
         (case (system-type 'os)
           [(unix macosx) (bytes->string/utf-8 (system-language+country))]
