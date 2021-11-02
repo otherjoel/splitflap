@@ -3,6 +3,7 @@
 @(require "misc.rkt"
           scribble/examples
           (only-in scribble/eval interaction)
+          (only-in scribble/bnf nonterm)
           (for-label (except-in gregor date date?)
                      net/url
                      racket/base
@@ -36,10 +37,10 @@ stance of allowing only @tech{tag URIs}, which are easy to create and read, and 
 stable even if the resource’s URL changes.
 
 A @deftech{tag URI} is an identifier of the form
-@racketvalfont{@litchar{tag:}@italic{authority}@litchar{,}@italic{date}@litchar{:}@italic{specific}}.
-The @racket[_authority] is a domain name (or email address) held by you as of @racket[_date];
+@racketvalfont{@litchar{tag:}@nonterm{authority}@litchar{,}@nonterm{date}@litchar{:}@nonterm{specific}}.
+The @nonterm{authority} is a domain name (or email address) held by you as of @nonterm{date};
 together, the authority and the date form a unique @italic{tagging entity}, which acts kind of like
-a namespace. The @racket[_specific] is a string uniquely identifying a particular resource within
+a namespace. The @nonterm{specific} is a string uniquely identifying a particular resource within
 the tagging entity.
 
 The tag URI scheme is formalized in @hyperlink["https://datatracker.ietf.org/doc/html/rfc4151"]{RFC
@@ -315,12 +316,12 @@ common-sense subset of RFC 5322:
 
 @itemlist[
 
-@item{Must be in the format @racketvalfont{@italic{local-part}@litchar{@"@"}@italic{domain}}}
+@item{Must be in the format @racketvalfont{@nonterm{local-part}@litchar{@"@"}@nonterm{domain}}}
 
-@item{The @racket[_local-part] must be no longer than 65 bytes and only include @litchar{a–z},
+@item{The @nonterm{local-part} must be no longer than 65 bytes and only include @litchar{a–z},
 @litchar{A–Z}, @litchar{0–9}, or characters in the set @litchar|{!#$%&'*+/=?^_‘{|}~-.}|.}
 
-@item{The @racket[_domain] must be valid according to @racket[dns-domain?].}
+@item{The @nonterm{domain} must be valid according to @racket[dns-domain?].}
 
 @item{The entire email address must be no longer than 255 bytes.}
 
