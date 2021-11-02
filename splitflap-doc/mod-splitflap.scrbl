@@ -101,10 +101,10 @@ system-language)] is used.
 
 @examples[#:eval mod-feed
           (define item
-            (feed-item (mint-tag-uri "rclib.org" "2012-06" "blog:example-post")
-                       "http://rclib.org/example-post.html"
+            (feed-item (mint-tag-uri "rclib.example.com" "2012-06" "blog:example-post")
+                       "http://rclib.example.com"
                        "Example"
-                       (person "Marion Paroo" "marion@rclib.org")
+                       (person "Marion Paroo" "marion@rclib.example.com")
                        (infer-moment "2013-04-13 08:45")
                        (infer-moment "2013-04-14")
                        '(article (p "Etc…"))))
@@ -132,7 +132,7 @@ A parameter that, when not set to @racket[#f], is used by @racket[express-xml] a
 
 @section{Podcasts}
 
-Splitflap provides some special data types for podcast feeds: @racket[epsisode] and
+Splitflap provides some special data types for podcast feeds: @racket[episode] and
 @racket[podcast]. These are patterned after @AppleRequirements[] since those serve as a kind of
 de facto standard for this application.
 
@@ -146,11 +146,11 @@ de facto standard for this application.
                   [media enclosure?]
                   [#:duration duration (or/c exact-nonnegative-integer? #f) #f]
                   [#:image-url image-url (or/c valid-url-string? #f) #f]
-                  [#:explicit? explicit (or/c boolean? '_) '_]
+                  [#:explicit? explicit any/c null]
                   [#:episode-num ep-num (or/c exact-nonnegative-integer? #f) #f]
                   [#:season-num s-num (or/c exact-nonnegative-integer? #f) #f]
                   [#:type type (or/c 'trailer 'full 'bonus #f) #f]
-                  [#:block? block boolean? #f])
+                  [#:block? block any/c #f])
          episode?]{
 
 Returns an @racketresultfont{#<episode>} struct, which is required for @racket[podcast]s in the same
@@ -180,6 +180,11 @@ artwork requirements} for other requirements.}
 @item{The @racket[#:duration] gives the episode’s duration in seconds, and is @spec{optional but
 recommended}.}
 
+@item{If @racket[_explicit] is an optional override of the mandatory feed-level parental advisory
+flag in @racket[podcast]. If it is @racket[_null] (the default), the episode will not contain any
+parental advisory information. @spec{If it is @racket[#f], Apple Podcasts will mark the episode as
+“Clean”. If it is any other value, Apple Podcasts will mark the episode as “Explicit”.}}
+
 @item{The @racket[#:episode-num] is optional, but @spec{Apple will require it if the
 @racket[podcast] has a type of @racket['episodic].}}
 
@@ -202,10 +207,10 @@ its content would otherwise cause the entire podcast to be removed from Apple Po
                   [category (or/c string? (list/c string? string?))]
                   [image-url valid-url-string?]
                   [owner person?]
-                  [explicit boolean?]
+                  [#:explicit? explicit any/c]
                   [#:type type (or/c 'serial 'episodic #f) #f]
-                  [#:block? block boolean? #f]
-                  [#:complete? complete boolean? #f]
+                  [#:block? block any/c #f]
+                  [#:complete? complete any/c #f]
                   [#:new-feed-url new-url (or/c valid-url-string? #f) #f])
          podcast?]{
 
@@ -236,10 +241,10 @@ in Apple’s podcast listings.}
 
 @itemlist[
 
-@item{Use @racket['episodic] when episodes are not
-intended to be consumed in any particular order: @spec{in this case, Apple Podcasts will present
-newest episodes first. (If organized into seasons, the newest season will be presented first;
-otherwise, episodes will be grouped by year published, newest first.)}}
+@item{Use @racket['episodic] when episodes are not intended to be consumed in any particular order:
+@spec{in this case, Apple Podcasts will present newest episodes first. (If organized into seasons,
+the newest season will be presented first; otherwise, episodes will be grouped by year published,
+newest first.)}}
 
 @item{Use @racket['serial] when
 episodes are intended to be consumed in sequential order: @spec{in this case, Apple Podcasts will

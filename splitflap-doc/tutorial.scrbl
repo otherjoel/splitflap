@@ -20,7 +20,7 @@ date, and a specific identifier:
 @(examples
   #:eval tutorial
   #:label #false
-  (define my-id (mint-tag-uri "my-domain.com" "2012" "blog")))
+  (define my-id (mint-tag-uri "example.com" "2012" "blog")))
 
 The idiomatic route is to create a tag URI for the entire feed, and then append to that URI to
 create tag URIs for the individual items in that feed.
@@ -40,12 +40,12 @@ For this tutorial, we’ll manually make a list with just one @racket[feed-item]
   (define my-items
     (list
      (feed-item
-      (append-specific my-id "first-post")       (code:comment @#,elem{item-specific ID})
-      "https://my-domain.com/first-post.html"    (code:comment @#,elem{URL})
-      "Chaucer, Rabelais and Balzac"             (code:comment @#,elem{title})
-      (person "Marian Paroo" "marian@rclib.org") (code:comment @#,elem{author})
-      (infer-moment "1912-06-21")                (code:comment @#,elem{publish date})
-      (infer-moment "1912-06-21")                (code:comment @#,elem{updated date})
+      (append-specific my-id "first-post")         (code:comment @#,elem{item-specific ID})
+      "https://example.com/first-post.html"        (code:comment @#,elem{URL})
+      "Chaucer, Rabelais and Balzac"               (code:comment @#,elem{title})
+      (person "Marian Paroo" "marian@example.com") (code:comment @#,elem{author})
+      (infer-moment "1912-06-21")                  (code:comment @#,elem{publish date})
+      (infer-moment "1912-06-21")                  (code:comment @#,elem{updated date})
       '(article (p "My first post; content TK"))))))
 
 
@@ -59,7 +59,7 @@ The @racket[feed] struct combines all the elements we’ve created so far:
   (define my-feed
     (feed
      my-id                     (code:comment @#,elem{tag URI})
-     "http://rclib.org/blog"   (code:comment @#,elem{site URL})
+     "http://example.com/blog" (code:comment @#,elem{site URL})
      "River City Library Blog" (code:comment @#,elem{Title})
      my-items)))
 
@@ -71,7 +71,7 @@ Final step: pass your feed to @racket[express-xml], specifying either the @racke
 @(examples
   #:eval tutorial
   #:label #false
-  (display (express-xml my-feed 'atom "https://rclib.org/feed.atom")))
+  (display (express-xml my-feed 'atom "https://example.com/feed.atom")))
 
 There you go! Save that string in a file and you’ve got yourself a valid Atom 1.0 feed.
 
@@ -80,7 +80,7 @@ Let’s do one in RSS format, for kicks. Note the different URL for this version
 @(examples
   #:eval tutorial
   #:label #false
-  (display (express-xml my-feed 'rss "https://rclib.org/feed.rss")))
+  (display (express-xml my-feed 'rss "https://example.com/feed.rss")))
 
 If you want the result as an X-expression, you can do that too, using the @racket[#:as] keyword
 argument:
@@ -88,7 +88,7 @@ argument:
 @(examples
   #:eval tutorial
   #:label #false
-  (express-xml my-feed 'rss "https://rclib.org/feed.rss" #:as 'xexpr))
+  (express-xml my-feed 'rss "https://example.com/feed.rss" #:as 'xexpr))
 
 @section{Wrap up}
 

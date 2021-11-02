@@ -182,7 +182,7 @@
          (guid [[isPermaLink "false"]] ,(tag-uri->string id))
          (description ,(if to-xml? (as-cdata content) (cdata-string (as-cdata content))))
          ,@(if/sp duration `(itunes:duration ,(number->string duration)))
-         ,@(if/sp (boolean? explicit?) `(itunes:explicit ,(if explicit? "true" "false")))
+         ,@(if/sp (not (null? explicit?)) `(itunes:explicit ,(if explicit? "true" "false")))
          ,@(if/sp image-url `(itunes:image [[href ,image-url]]))
          ,@(if/sp episode-n `(itunes:episode ,(number->string episode-n)))
          ,@(if/sp season-n `(itunes:season ,(number->string season-n)))
@@ -196,7 +196,7 @@
 (define/contract (make-episode id url title author published updated content media
                                #:duration [duration #f]
                                #:image-url [image-url #f]
-                               #:explicit? [explicit? '_]
+                               #:explicit? [explicit? null]
                                #:episode-num [episode-n #f]
                                #:season-num [season-n #f]
                                #:type [type #f]
@@ -204,11 +204,11 @@
   (->* (tag-uri? valid-url-string? string? person? moment? moment? xexpr? enclosure?)
        (#:duration (or/c exact-nonnegative-integer? #f)
         #:image-url (or/c valid-url-string? #f)
-        #:explicit? (or/c boolean? '_)
+        #:explicit? any/c
         #:episode-num (or/c exact-nonnegative-integer? #f)
         #:season-num (or/c exact-nonnegative-integer? #f)
         #:type (or/c 'trailer 'full 'bonus #f)
-        #:block? boolean?)
+        #:block? any/c)
        episode?)
   (unless (moment>=? updated published)
     (raise-arguments-error 'feed-item "updated timestamp cannot come before published timestamp"
@@ -265,7 +265,8 @@
        [(xml) (xml-document feed-xpr)]
        [(xml-string) (indented-xml-string feed-xpr #:document? #t)]))])
 
-(define/contract (make-podcast id site-url name entries category image-url owner explicit?
+(define/contract (make-podcast id site-url name entries category image-url owner
+                               #:explicit? explicit?
                                #:type [type #f]
                                #:block? [block? #f]
                                #:complete? [complete? #f]
@@ -277,10 +278,10 @@
         (or/c string? (list/c string? string?))
         valid-url-string?
         person?
-        boolean?)
+        #:explicit? any/c)
        (#:type (or/c 'serial 'episodic #f)
-        #:block? boolean?
-        #:complete? boolean?
+        #:block? any/c
+        #:complete? any/c
         #:new-feed-url (or/c valid-url-string? #f))
        podcast?)
   (podcast_ id site-url name entries category image-url owner explicit? type block? complete? new-feed-url))

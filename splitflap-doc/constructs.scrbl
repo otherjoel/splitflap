@@ -10,6 +10,7 @@
                      racket/contract
                      racket/file
                      racket/promise
+                     racket/string
                      splitflap
                      txexpr))
 
@@ -62,8 +63,8 @@ things that your feed is serving. See @racket[tag-specific-string?] for informat
 characters are allowed here.
 
 @examples[#:eval mod-constructs
-          (mint-tag-uri "rclib.org" "2012-04-01" "Marian'sBlog")
-          (mint-tag-uri "diveintomark.org" "2003" "3.2397")]
+          (mint-tag-uri "rclib.example.com" "2012-04-01" "Marian'sBlog")
+          (mint-tag-uri "diveintomark.example.com" "2003" "3.2397")]
 
 }
 
@@ -72,7 +73,7 @@ characters are allowed here.
 Converts a @racketlink[mint-tag-uri]{@tt{tag-uri}} into a string.
 
 @examples[#:eval mod-constructs
-          (define rclib-id (mint-tag-uri "rclib.org" "2012-04-01" "Marian'sBlog"))
+          (define rclib-id (mint-tag-uri "rclib.example.com" "2012-04-01" "Marian'sBlog"))
           (tag-uri->string rclib-id)]
 
 }
@@ -84,7 +85,7 @@ the tag URI.  This allows you to append to a feed’s @tech{tag URI} to create u
 the items within that feed.
 
 @examples[#:eval mod-constructs
-          (define kottke-id (mint-tag-uri "kottke.org" "2005-12" "1"))
+          (define kottke-id (mint-tag-uri "kottke.example.com" "2005-12" "1"))
           kottke-id
           (append-specific kottke-id "post-slug")]
 
@@ -147,7 +148,7 @@ considers people to be synonymous with email addresses. So @racket[person] requi
 Converts @racket[_p] into a tagged X-expresssion using @racket[_entity] as enclosing tag name.
 
 @examples[#:eval mod-constructs
-          (define frank (person "Frank Abignale" "fabignale@panam.com"))
+          (define frank (person "Frankincense Pontipee" "frank@example.com"))
           (person->xexpr frank 'author 'atom)
           (person->xexpr frank 'contributor 'atom)
           (person->xexpr frank 'author 'rss)
@@ -239,7 +240,7 @@ This procedure accesses the filesystem; if @racket[_file] does not exist, an exc
           (write-to-file (make-bytes 100 65) audio-file #:exists 'replace)
           (code:comment @#,elem{Pass the temp file to an enclosure})
           (display
-           (express-xml (file->enclosure audio-file "http://rclib.org/episodes") 'atom))
+           (express-xml (file->enclosure audio-file "http://rclib.example.com/episodes") 'atom))
           (code:comment @#,elem{Cleanup})
           (delete-file audio-file)]
 }
@@ -293,15 +294,15 @@ valid URL is one which, when parsed with @racket[string->url], includes a valid 
 address).
 
 @examples[#:eval mod-constructs
-          (valid-url-string? "http://rclib.org")
-          (valid-url-string? "telnet://rclib.org")
-          (code:line (valid-url-string? "gonzo://rclib.org") (code:comment @#,elem{scheme need not be registered}))
-          (code:line (valid-url-string? "https://user:p@joeldueck.com:8080") (code:comment @#,elem{includes user/password/port}))
+          (valid-url-string? "http://rclib.example.com")
+          (valid-url-string? "telnet://rclib.example.com")
+          (code:line (valid-url-string? "gonzo://example.com") (code:comment @#,elem{scheme need not be registered}))
+          (code:line (valid-url-string? "https://user:p@example.com:8080") (code:comment @#,elem{includes user/password/port}))
           (code:line (valid-url-string? "file://C:\\home\\user?q=me") (code:comment @#,elem{Look, you do you}))
           code:blank
           (code:comment @#,elem{Valid URIs but not URLs:})
           (code:line (valid-url-string? "news:comp.servers.unix") (code:comment @#,elem{no host given, only path}))
-          (code:line (valid-url-string? "http://subdomain-.ape.net") (code:comment @#,elem{invalid label}))
+          (code:line (valid-url-string? "http://subdomain-.example.com") (code:comment @#,elem{invalid label}))
           code:blank
           (code:line (code:comment @#,elem{Valid URLs but not allowed by this library for use in feeds}))
           (code:line (valid-url-string? "ldap://[2001:db8::7]/c=GB?objectClass?one") (code:comment @#,elem{Host is not a DNS domain}))
@@ -328,12 +329,12 @@ common-sense subset of RFC 5322:
 ]
 
 @examples[#:eval mod-constructs
-          (email-address? "test-email.with+symbol@domain.com")
-          (email-address? "#!$%&'*+-/=?^_{}|~@domain.org")
+          (email-address? "test-email.with+symbol@example.com")
+          (email-address? "#!$%&'*+-/=?^_{}|~@example.com")
           code:blank
           (code:comment @#,elem{See also dns-domain? which applies to everything after the @"@" sign})
           (email-address? "email@123.123.123.123")
-          (email-address? "λ@racket-lang.org")]
+          (email-address? "λ@example.com")]
 
 }
 
@@ -344,12 +345,12 @@ Returns @racket[_addr] if it is a valid email address (according to the same rul
 address is invalid.
 
 @interaction[#:eval mod-constructs
-             (validate-email-address "marian@rclib.org")
+             (validate-email-address "marian@rclib.example.com")
              (validate-email-address "@")
-             (validate-email-address "me@myself@domain.com")
-             (validate-email-address ".marian@rclib.org")
-             (validate-email-address "λ@racket-lang.org")
-             (validate-email-address "lambda@racket.1.com")]
+             (validate-email-address "me@myself@example.com")
+             (validate-email-address ".marian@rclib.example.com")
+             (validate-email-address "λ@example.com")
+             (validate-email-address "lambda@1.example.com")]
 
 }
 
@@ -380,8 +381,8 @@ Returns @racket[#t] if @racket[_v] is a two-character lowercase symbol matching 
 
 }
 
-@defproc[(language-codes) (listof iso-639-language-code?)]{
+@defthing[language-codes (listof iso-639-language-code?)]{
 
-Returns a list of symbols that qualify as @racket[iso-639-language-code?].
+A list of symbols that qualify as @racket[iso-639-language-code?].
 
 }
