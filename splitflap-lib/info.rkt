@@ -10,6 +10,6 @@
                "base"))
 (define build-deps '("at-exp-lib"
                      "rackunit-lib"))
-
+(define compile-omit-paths '("private/build.rkt"))
 (define pkg-desc "implementation part of \"splitflap\"")
 (define license 'BlueOak-1.0.0)
