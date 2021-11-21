@@ -131,6 +131,29 @@
   (check-equal? (txexpr->safe-content-str `(div (p ,judy-str)))
                 "<div><p>Punch &amp; Judy&apos;s friend George&#8482;</p></div>"))
 
+(define (content->safe-element content element dialect preserve-cdata-struct?)
+  `(,element
+    ,@(if/sp (and (txexpr? content) (eq? dialect 'atom)) `[[type "html"]])
+    ,(cond
+      [(string? content)
+       (let ([result (as-cdata content)]) (if preserve-cdata-struct? result (cdata-string result)))]
+      [else (txexpr->safe-content-str content)])))
+
+(module+ test
+  (define content2 "<div>Hi ]]> whoops how did that get there</div>")
+  ;; Includes type=text attribute for Atom
+  (check-equal? (content->safe-element `(div (p "My trademark&trade;")) 'content 'atom #f)
+                '(content ((type "html")) "<div><p>My trademark&#8482;</p></div>"))
+  ;; Omit type attribute for RSS
+  (check-equal? (content->safe-element `(div (p "My trademark&trade;")) 'description 'rss #f)
+                '(description "<div><p>My trademark&#8482;</p></div>"))
+  ;; String content encoded as CDATA
+  (check-equal? (content->safe-element "<div>mischief managed: ]]></div>" 'content 'atom #f)
+                '(content "<![CDATA[<div>mischief managed: ]]&gt;</div>]]>"))
+  ;; preserve-cdata-struct? #t
+  (check-true (cdata? (cadr (content->safe-element "x" 'content 'atom #t)))))
+
+
 ;; ~~ XML Display ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ;; Convert an xexpr to a string with escaped and nicely-indented XML.
