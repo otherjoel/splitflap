@@ -66,8 +66,7 @@
   [(define/generic <-express-xml express-xml)
    (define/contract (express-xml e dialect [url #f] #:as [result-type 'xml-string])
      (->* (any/c rss-dialect?) (any/c #:as xml-type/c) any/c)
-     
-     (match-define (feed-item id url title author published updated content media) e)
+     (match-define (feed-item id url title author published updated raw-content media) e)
      (define to-xml? (memq result-type '(xml xml-string xexpr-cdata)))
      (define entry-xpr
        (case dialect
@@ -80,7 +79,7 @@
             ,@(if/sp media (<-express-xml media 'atom #:as 'xexpr))
             ,(person->xexpr author 'author 'atom)
             (id ,(tag-uri->string id))
-            (content ,(if to-xml? (as-cdata content) (cdata-string (as-cdata content)))))]
+            ,(content->safe-element raw-content 'content 'atom to-xml?))]
          [(rss)
           `(item
             (title ,title)
@@ -89,7 +88,7 @@
             ,@(if/sp media (<-express-xml media 'rss #:as 'xexpr))
             ,(person->xexpr author 'author 'rss)
             (guid [[isPermaLink "false"]] ,(tag-uri->string id))
-            (description ,(if to-xml? (as-cdata content) (cdata-string (as-cdata content)))))]))
+            ,(content->safe-element raw-content 'description 'rss to-xml?))]))
      (case result-type
        [(xexpr xexpr-cdata) entry-xpr]
        [(xml) (xexpr->xml entry-xpr)]
@@ -112,7 +111,7 @@
 
 (struct feed
   (id site-url name entries)
-  #:guard (struct-guard/c tag-uri? valid-url-string? xexpr? (listof feed-item?))
+  #:guard (struct-guard/c tag-uri? valid-url-string? string? (listof feed-item?))
 
   #:methods gen:food
   [(define/generic <-express-xml express-xml)
@@ -130,7 +129,7 @@
          [(atom)
           `(feed [[xmlns "http://www.w3.org/2005/Atom"]
                   [xml:lang ,(symbol->string (or (feed-language) (force system-language)))]]
-                 (title ,feed-name)
+                 (title [[type "text"]] ,feed-name)
                  (link [[rel "self"] [href ,feed-url]])
                  (link [[rel "alternate"] [href ,site-url]])
                  (updated ,(moment->string last-updated 'atom))
@@ -180,7 +179,7 @@
          ,@(if/sp ep-type `(itunes:episodeType ,(symbol->string ep-type)))
          ,(person->xexpr author 'author 'rss)
          (guid [[isPermaLink "false"]] ,(tag-uri->string id))
-         (description ,(if to-xml? (as-cdata content) (cdata-string (as-cdata content))))
+         ,(content->safe-element content 'description 'rss to-xml?)
          ,@(if/sp duration `(itunes:duration ,(number->string duration)))
          ,@(if/sp (not (null? explicit?)) `(itunes:explicit ,(if explicit? "true" "false")))
          ,@(if/sp image-url `(itunes:image [[href ,image-url]]))
@@ -216,8 +215,8 @@
   (episode_ id url title author published updated content media
             duration image-url explicit? episode-n season-n type block?))
 
-;; Podcasts extend feeds. They will only ever express as RSS 2.0 because that’s what Apple’s
-;; podcast directory requires.
+;; Podcasts are feeds with more requirements. They will only ever express as RSS 2.0 because that’s
+;; what Apple’s podcast directory requires.
 (struct podcast (id site-url name entries category image-url owner explicit? type block? complete? new-feed-url)
   #:constructor-name podcast_
   #:methods gen:food
@@ -273,7 +272,7 @@
                                #:new-feed-url [new-feed-url #f])
   (->* (tag-uri?
         valid-url-string?
-        xexpr?
+        string?
         (listof episode?)
         (or/c string? (list/c string? string?))
         valid-url-string?

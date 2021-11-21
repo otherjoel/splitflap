@@ -41,11 +41,14 @@ encounter any validation errors in feeds created with Splitflap.
                     [media (or/c enclosure? #f) #f])
          feed-item?]{
 
-Returns an opaque @racketresultfont{#<feed-item>} struct for inclusion in a @racket[feed]. You can
-inspect its contents with @racket[express-xml].
+Returns a @racketresultfont{#<feed-item>} struct for inclusion in a @racket[feed]. You can inspect
+its contents with @racket[express-xml].
 
-The @racket[_id] argument must be a @tech{tag URI} obtained from @racket[mint-tag-uri] or
-@racket[append-specific].
+The @racket[_id] argument must be a @tech{tag URI} (obtain from @racket[mint-tag-uri] or
+@racket[append-specific]).
+
+The @racket[_title] should not contain HTML markup; if it does, it will be escaped, and the raw markup may
+by shown in applications that use your feed.
 
 The @racket[_author] argument must be a @racket[person] struct.
 
@@ -53,6 +56,9 @@ The value of @racket[_updated] must be identical to or after @racket[_published]
 information into account, or an exception is raised. The values for these arguments can be most
 conveniently supplied by @racket[infer-moment], but any moment-producing method will work, such as
 constructing @racket[moment]s directly, parsing strings with @racket[parse-moment], etc.
+
+If @racket[_content] is a @racketlink[txexpr?]{tagged X-expression}, it will be included as
+XML-appropriate escaped HTML; if it is a plain string, it will be included as CDATA.
 
 You can optionally use the @racket[_media] argument to supply an @tech{enclosure}, but if you are
 generating a feed for a podcast you should consider using @racket[episode] and @racket[podcast]
@@ -62,7 +68,7 @@ instead.
 
 @defproc[(feed [id tag-uri?]
                [site-url valid-url-string?]
-               [name xexpr?]
+               [name string?]
                [entries (listof feed-item?)])
           feed?]{
 
@@ -162,6 +168,9 @@ information into account, or an exception is raised. The values for these argume
 conveniently supplied by @racket[infer-moment], but any moment-producing method will work, such as
 constructing @racket[moment]s directly, parsing strings with @racket[parse-moment], etc.
 
+If @racket[_content] is a @racketlink[txexpr?]{tagged X-expression}, it will be included as escaped
+HTML; if it is a plain string, it will be included as CDATA.
+
 Below are further notes about particular elements supplied to @racket[episode]. The @spec{colored
 passages} indicate things which are required by Apple for inclusion in the Apple Podcasts directory
 but which are @emph{not} validated by Splitflap. (See @AppleRequirements[].)
@@ -202,7 +211,7 @@ its content would otherwise cause the entire podcast to be removed from Apple Po
 
 @defproc[(podcast [id tag-uri?]
                   [site-url valid-url-string?]
-                  [name xexpr?]
+                  [name string?]
                   [episodes (listof episode?)]
                   [category (or/c string? (list/c string? string?))]
                   [image-url valid-url-string?]
