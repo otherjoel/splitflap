@@ -24,7 +24,7 @@
     (cond [(txexpr? v)
            (regexp-replace* #rx"&amp;|&lt;|&gt;" (xexpr->string v) (lambda (e) (hash-ref entities e)))]
           [else v]))
-  (cdata 'racket 'racket (format "<![CDATA[~a]]>" cdata-str)))
+  (cdata 'racket 'racket (format "<![CDATA[~a]]>" (string-replace cdata-str "]]>" "]]&gt;"))))
 
 (module+ test
   ;; String input: no escaping in result
@@ -32,7 +32,10 @@
                 (cdata 'racket 'racket "<![CDATA[Hi & < >]]>"))
   ;; Txexpr input: no escaping in result
   (check-equal? (as-cdata '(div (p "Hi & < >")))
-                (cdata 'racket 'racket "<![CDATA[<div><p>Hi & < ></p></div>]]>")))
+                (cdata 'racket 'racket "<![CDATA[<div><p>Hi & < ></p></div>]]>"))
+  ;; …but DO escape the forbidden string "]]>" which would prematurely end the block
+  (check-equal? (as-cdata '(div (p "Hi ]]> whoops how did that get there")))
+                (cdata 'racket 'racket "<![CDATA[<div><p>Hi ]]&gt; whoops how did that get there</p></div>]]>")))
 
 ;; Convert an x-expression to a complete XML document
 (define (xml-document xpr)
