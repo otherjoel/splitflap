@@ -120,7 +120,6 @@
                            (numberize-named-entities c)
                            (list (loop c))))
                      (get-elements x)))]
-       [(txexpr? x) (txexpr (car x) (get-attrs x) (map loop (get-elements x)))]
        [else x]))))
 
 (module+ test
