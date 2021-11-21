@@ -274,7 +274,7 @@
   (->* (tag-uri?
         valid-url-string?
         xexpr?
-        (listof feed-item?)
+        (listof episode?)
         (or/c string? (list/c string? string?))
         valid-url-string?
         person?
