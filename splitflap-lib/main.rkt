@@ -234,7 +234,7 @@
           `(itunes:category [[text ,cat1]]
                             (itunes:category [[text ,cat2]]))]
          [(? string? c) `(itunes:category [[text ,c]])]))
-     (define last-updated (feed-item-updated (car episodes-sorted)))
+     (define last-updated (episode-updated (car episodes-sorted)))
      (define to-xml? (memq result-type '(xml xml-string)))
 
      (define feed-xpr
@@ -250,7 +250,7 @@
               ,@(if/sp (include-generator?) (generator 'rss))
               (description ,feed-name)
               (language ,(symbol->string (or (feed-language) (force system-language))))
-              ,(person->xexpr owner 'itunes:owner ''itunes)
+              ,(person->xexpr owner 'itunes:owner 'itunes)
               (itunes:image [[href ,image-url]])
               ,category
               (itunes:explicit ,(if explicit? "yes" "no"))
