@@ -21,7 +21,7 @@
 
 (define expect-atom @~a{
 <entry>
-  <title type="text">Kate&apos;s First Post</title>
+  <title type="text">Kate's First Post</title>
   <link rel="alternate" href="https://example.com/blog/one.html" />
   <updated>2007-03-17T00:00:00Z</updated>
   <published>2007-03-17T00:00:00Z</published>
@@ -63,7 +63,7 @@
   <updated>2007-03-17T00:00:00Z</updated>
   <id>tag:example.com,2007:blog</id>
   <entry>
-    <title type="text">Kate&apos;s First Post</title>
+    <title type="text">Kate's First Post</title>
     <link rel="alternate" href="https://example.com/blog/one.html" />
     <updated>2007-03-17T00:00:00Z</updated>
     <published>2007-03-17T00:00:00Z</published>
