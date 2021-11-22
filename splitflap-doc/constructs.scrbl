@@ -91,6 +91,17 @@ the items within that feed.
 
 }
 
+@defproc[(tag=? [tag1 tag-uri?] [tag2 tag-uri?]) boolean?]{
+
+@margin-note{The tag URI spec
+@hyperlink["https://datatracker.ietf.org/doc/html/rfc4151#section-2.4"]{defines} tags as being equal
+when their byte-strings are indistinguishable.}
+
+Returns @racket[#t] if the @racket[tag-uri->string] representation of @racket[_tag1] and
+@racket[_tag2] are @racket[equal?], @racket[#f] otherwise.
+
+}
+
 @defproc[(tag-entity-date? [str string?]) boolean?]{
 
 Returns @racket[#t] if @racket[_str] is a string of the form @racket{YYYY[-MM[-DD]]} --- that is, an

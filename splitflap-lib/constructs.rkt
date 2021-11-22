@@ -24,6 +24,7 @@
          ; Tag URIs:
          tag-entity-date?
          mint-tag-uri
+         tag=?
          tag-uri?
          tag-uri->string
          append-specific
@@ -285,7 +286,30 @@
 
 (define/contract (tag-uri->string t #:specific [specific (tag-uri-specific t)])
   (->* (tag-uri?) (#:specific tag-specific-string?) string?)
-  (format "tag:~a,~a:~a" (tag-uri-authority t) (tag-uri-date t) specific))
+  (string-append "tag:" (tag-uri-authority t) "," (tag-uri-date t) ":" specific))
+
+;; RFC 4151 section 2.4 — Equality of tags:
+;; “Tags are simply strings of characters and are considered equal if and
+;;  only if they are completely indistinguishable in their machine
+;;  representations when using the same character encoding.  That is, one
+;;  can compare tags for equality by comparing the numeric codes of their
+;;  characters, in sequence, for numeric equality.  This criterion for
+;;  equality allows for simplification of tag-handling software, which
+;;  does not have to transform tags in any way to compare them.”
+
+(define/contract (tag=? t1 t2)
+  (-> tag-uri? tag-uri? boolean?)
+  (apply equal? (map tag-uri->string (list t1 t2))))
+
+(module+ test
+  (check-true (tag=? (mint-tag-uri "example.com" "2005" "main")
+                     (mint-tag-uri "example.com" "2005" "main")))
+  ;; Comparison is case-sensitive?
+  (check-false (tag=? (mint-tag-uri "Example.com" "2005" "main")
+                      (mint-tag-uri "example.com" "2005" "main")))
+  ;; Date equivalency doesn’t count
+  (check-false (tag=? (mint-tag-uri "Example.com" "2005-01" "main")
+                      (mint-tag-uri "Example.com" "2005-01-01" "main"))))
 
 ;; ~~ Dates ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -9,6 +9,7 @@
          txexpr
          racket/contract
          racket/generic
+         racket/list
          racket/match
          racket/promise
          racket/runtime-path
@@ -18,12 +19,12 @@
 (provide feed-language
          food?
          (rename-out [make-feed-item feed-item]
+                     [make-feed feed]
                      [make-episode episode]
                      [make-podcast podcast])
          (all-from-out "constructs.rkt")
          feed-item?
          episode?
-         feed
          feed?
          podcast?
          include-generator?
@@ -112,7 +113,7 @@
 (struct feed
   (id site-url name entries)
   #:guard (struct-guard/c tag-uri? valid-url-string? string? (listof feed-item?))
-
+  #:constructor-name feed_
   #:methods gen:food
   [(define/generic <-express-xml express-xml)
    (define/contract (express-xml f dialect [feed-url #f] #:as [result-type 'xml-string])
@@ -154,6 +155,18 @@
        [(xexpr xexpr-cdata) feed-xpr]
        [(xml) (xml-document feed-xpr)]
        [(xml-string) (indented-xml-string feed-xpr #:document? #t)]))])
+
+(define/contract (make-feed id site-url name entries)
+  (-> tag-uri? valid-url-string? string? (listof feed-item?) feed?)
+  (let* ([entry-tags (map feed-item-id entries)]
+         [duplicate-tag (check-duplicates (cons id entry-tags) tag=?)])
+    (when duplicate-tag
+      (raise-arguments-error 'feed
+                             "Duplicate tag URI found in feed"
+                             "First duplicate encountered" (tag-uri->string duplicate-tag)
+                             "Feed tag URI" (tag-uri->string id)
+                             "Feed item tag URIs" (map tag-uri->string entry-tags))))
+  (feed_ id site-url name entries))
 
 ;; ~~ Podcast episodes and feeds ~~~~~~~~~~~~~~~~~
 
@@ -264,7 +277,7 @@
        [(xml) (xml-document feed-xpr)]
        [(xml-string) (indented-xml-string feed-xpr #:document? #t)]))])
 
-(define/contract (make-podcast id site-url name entries category image-url owner
+(define/contract (make-podcast id site-url name episodes category image-url owner
                                #:explicit? explicit?
                                #:type [type #f]
                                #:block? [block? #f]
@@ -283,7 +296,15 @@
         #:complete? any/c
         #:new-feed-url (or/c valid-url-string? #f))
        podcast?)
-  (podcast_ id site-url name entries category image-url owner explicit? type block? complete? new-feed-url))
+  (let* ([episode-tags (map episode-id episodes)]
+         [duplicate-tag (check-duplicates (cons id episode-tags) tag=?)])
+    (when duplicate-tag
+      (raise-arguments-error 'podcast
+                             "Duplicate tag URI found in podcast feed"
+                             "First duplicate encountered" (tag-uri->string duplicate-tag)
+                             "Feed tag URI" (tag-uri->string id)
+                             "Episode tag URIs" (map tag-uri->string episode-tags))))
+  (podcast_ id site-url name episodes category image-url owner explicit? type block? complete? new-feed-url))
 
 ;; Version
 (define-runtime-path lib-folder ".")

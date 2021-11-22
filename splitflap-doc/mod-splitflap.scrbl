@@ -74,6 +74,9 @@ instead.
 
 Returns a @racketresultfont{#<feed>} struct. You can inspect its contents with @racket[express-xml].
 
+If any of the @tech{tag URIs} of the @racket[_entries] are @racket[tag=?] with each other or with the
+feed @racket[_id], an exception is raised identifying the first duplicate encountered.
+
 The @racket[_entries] will be sorted in reverse chronological order by their “updated” timestamps.
 The most recent timestamp is also used as the feed’s own last-updated timestamp.
 
@@ -225,6 +228,9 @@ its content would otherwise cause the entire podcast to be removed from Apple Po
 
 Returns a @racketresultfont{#<podcast>} struct, which can be converted into a feed with
 @racket[express-xml].
+
+If any of the @tech{tag URIs} of the @racket[_episodes] are @racket[tag=?] with each other or with
+the podcast feed @racket[_id], an exception is raised identifying the first duplicate encountered.
 
 Below are some notes about particular elements supplied to @racket[podcast]. The @spec{colored
 passages} indicate things which are required by Apple for inclusion in the Apple Podcasts directory

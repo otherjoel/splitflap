@@ -21,10 +21,8 @@
                 `(div (p "Welcome to my blog.") (ul (li "& ' < > © ℗ ™")))
                 (enclosure "gopher://umn.edu/greeting.m4a" "audio/x-m4a" 1234))))
 
-(check-exn exn:fail:contract? (λ () (feed site-id "not a url" "Title" (list e1))))
-
 ;; Check complete feed output for both Atom and RSS
-(define e1
+(define entry1
   (parameterize ([current-timezone 0])
     (feed-item (append-specific site-id "one")
                 "https://example.com/blog/one.html"
@@ -35,7 +33,7 @@
                 `(div (p "Welcome to my blog.") (ul (li "& ' < > © ℗ ™")))
                 (enclosure "gopher://umn.edu/greeting.m4a" "audio/x-m4a" 1234))))
 
-(define f1 (feed site-id "https://example.com/" "Kate Poster Posts" (list e1)))
+(define f1 (feed site-id "https://example.com/" "Kate Poster Posts" (list entry1)))
 
 (define expect-feed-atom @~a{
 <?xml version="1.0" encoding="UTF-8"?>
@@ -89,6 +87,46 @@
                [feed-language 'en])
   (check-equal? (express-xml f1 'atom "https://example.com/feed.atom") expect-feed-atom)
   (check-equal? (express-xml f1 'rss "https://example.com/feed.rss") expect-feed-rss))
+
+;; Setup: Duplicate tag URIs cause exception at time of feed construction
+(define entry2-suffix "conflict")
+(define entry2 
+  (parameterize ([current-timezone 0])
+    (feed-item (append-specific site-id entry2-suffix)
+                "https://example.com/blog/two.html"
+                "Kate's Second Post"
+                (person "Kate Poster" "kate@example.com")
+                (infer-moment "2007-03-20")
+                (infer-moment "2007-03-20")
+                `(div (p "Let’s try this again.")))))
+
+(define entry3-conflict
+  (parameterize ([current-timezone 0])
+    (feed-item (append-specific site-id entry2-suffix) ;; Conflicts with entry-2
+                "https://example.com/blog/three.html"
+                "Third time still doesn’t pay for all"
+                (person "Kate Poster" "kate@example.com")
+                (infer-moment "2007-03-21")
+                (infer-moment "2007-03-21")
+                `(div (p "Don Music is my favorite artist")))))
+
+;; Check for duplicate IDs among episodes
+(check-exn
+ exn:fail:contract?
+ (lambda ()
+   (feed (append-specific site-id entry2-suffix) ;; Conflicts with entry2
+         "https://example.com"
+         "Kate Poster Posts"
+         (list entry1 entry2)))) ;; no conflicts within episodes
+
+;; Check for feed ID duplicated in entries
+(check-exn
+ exn:fail:contract?
+ (lambda ()
+   (feed site-id
+         "https://example.com"
+         "Kate Poster Posts"
+         (list entry1 entry2 entry3-conflict))))
 
 ;; Check podcast episode output
 (define test-ep1
@@ -207,3 +245,55 @@
 (parameterize ([include-generator? #f]
                [feed-language 'en])
   (check-equal? (express-xml test-podcast 'rss "https://example.com/podcast.rss") expect-podcast))
+
+
+;; Duplicate tag URIs result in exception at podcast feed construction time
+(define ep3-suffix "ep3")
+
+(define test-ep3 
+  (parameterize ([current-timezone 0])
+  (episode (append-specific site-id ep3-suffix)
+           "http://example.com/ep3"
+           "Kate Wakes Up Happy"
+           (person "Kate Poster" "kate@example.com")
+           (infer-moment "2021-11-21")
+           (infer-moment "2021-11-21")
+           '(article (p "Welcome to the show"))
+           (enclosure "http://example.com/ep3.m4a" "audio/x-m4a" 1234))))
+
+(define test-ep3-conflict
+  (parameterize ([current-timezone 0])
+  (episode (append-specific site-id ep3-suffix) ;; same as test-ep3
+           "http://example.com/ep4"
+           "Kate Wakes Up Confused"
+           (person "Kate Poster" "kate@example.com")
+           (infer-moment "2021-11-22")
+           (infer-moment "2021-11-22")
+           '(article (p "Welcome to the show"))
+          (enclosure "http://example.com/ep4.m4a" "audio/x-m4a" 12345))))
+
+;; Check for duplicate IDs among episodes
+(check-exn
+ exn:fail:contract?
+ (lambda ()
+   (podcast (append-specific site-id ep3-suffix) ;; Conflicts with test-ep3
+           "https://example.com"
+           "Kate Does a Podcast"
+           (list test-ep1 test-ep2 test-ep3) ;; no conflicts within episodes
+           (list "Leisure" "Animation & Manga")
+           "https://example.com/cover-art.jpg"
+           (person "Kate Poster" "kate@example.com")
+           #:explicit? #t)))
+
+;; Check for feed ID duplicated in episodes
+(check-exn
+ exn:fail:contract?
+ (lambda ()
+   (podcast site-id
+           "https://example.com"
+           "Kate Does a Podcast"
+           (list test-ep1 test-ep2 test-ep3 test-ep3-conflict)
+           (list "Leisure" "Animation & Manga")
+           "https://example.com/cover-art.jpg"
+           (person "Kate Poster" "kate@example.com")
+           #:explicit? #t)))
