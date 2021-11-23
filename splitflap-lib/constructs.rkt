@@ -394,6 +394,9 @@
   (check-equal? (path/string->mime-type ".mpg") "video/mpeg")
   (check-equal? (path/string->mime-type ".mp4") "video/mp4")
 
+  ;; Can use paths
+  (check-equal? (path/string->mime-type (build-path "." "file.epub")) "application/epub+zip")
+
   ;; Empty list returned for unknown extensions
   (check-equal? (path/string->mime-type ".asdahsf") #f))
 
@@ -461,8 +464,20 @@
     (raise-argument-error 'file->enclosure "path to an existing file" file-path))
   (define filename (car (reverse (explode-path file-path))))
   (enclosure (path->string (build-path (string->path base-url) filename))
-             (path/string->mime-type (path->string filename))
+             (path/string->mime-type filename)
              (file-size file-path)))
+
+(module+ test
+  (require racket/file racket/runtime-path)
+  (define-runtime-path temp "temp.mp3")
+  (display-to-file (make-bytes 100 65) temp #:exists 'truncate)
+  (check-txexprs-equal?
+   (express-xml (file->enclosure temp "http://example.com") 'atom #:as 'xexpr)
+   '(link [[rel "enclosure"]
+           [href "http://example.com/temp.mp3"]
+           [length "100"]
+           [type "audio/mpeg"]]))
+  (delete-file temp))
 
 ;; ~~ ISO 639 Language codes ~~~~~~~~~~~~~~~~~~~~~
 

@@ -248,10 +248,10 @@ This procedure accesses the filesystem; if @racket[_file] does not exist, an exc
 @examples[#:eval mod-constructs
           (code:comment @#,elem{Make a temporary file})
           (define audio-file (make-temporary-file "audio-~a.m4a"))
-          (write-to-file (make-bytes 100 65) audio-file #:exists 'replace)
+          (display-to-file (make-bytes 100 66) audio-file #:exists 'truncate)
           (code:comment @#,elem{Pass the temp file to an enclosure})
           (display
-           (express-xml (file->enclosure audio-file "http://rclib.example.com/episodes") 'atom))
+           (express-xml (file->enclosure audio-file "http://example.com") 'atom))
           (code:comment @#,elem{Cleanup})
           (delete-file audio-file)]
 }
@@ -273,7 +273,7 @@ yields a hash table mapping file extensions (in lowercase symbol form) to MIME t
 @defproc[(path/string->mime-type [path path-string?]) (or/c string? #f)]{
 
 Parses a file extension from @racket[_path] and returns its corresponding MIME type if one exists
-in @racket[mime-types-by-ext], @racket[#f] otherwise.
+in @racket[mime-types-by-ext], @racket[#f] otherwise. This function does not access the file system.
 
 @examples[#:eval mod-constructs
           (path/string->mime-type ".m4a")
