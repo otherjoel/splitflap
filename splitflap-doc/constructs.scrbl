@@ -217,7 +217,7 @@ Converts @racket[_m] into a timestamp in the format required by the chosen @rack
             
 }
 
-@section{Enclosures}
+@section{Enclosures and MIME types}
 
 An @deftech{enclosure} is an arbitrary resource related to a feed item that is potentially large in
 size and may require special handling. The canonical example is an MP3 file containing the audio for
@@ -254,6 +254,32 @@ This procedure accesses the filesystem; if @racket[_file] does not exist, an exc
            (express-xml (file->enclosure audio-file "http://rclib.example.com/episodes") 'atom))
           (code:comment @#,elem{Cleanup})
           (delete-file audio-file)]
+}
+
+@defthing[mime-types-by-ext (promise/c (hash/c symbol? string?))]{
+
+@margin-note{This table is built directly from
+@hyperlink["https://svn.apache.org/viewvc/httpd/httpd/trunk/docs/conf/mime.types?view=markup"]{the
+list maintained in the Apache SVN repository}.}
+
+A @tech[#:doc '(lib "scribblings/reference/reference.scrbl")]{promise} that, when @racket[force]d,
+yields a hash table mapping file extensions (in lowercase symbol form) to MIME types.
+
+@examples[#:eval mod-constructs
+          (hash-ref (force mime-types-by-ext) 'epub)]
+
+}
+
+@defproc[(path/string->mime-type [path path-string?]) (or/c string? #f)]{
+
+Parses a file extension from @racket[_path] and returns its corresponding MIME type if one exists
+in @racket[mime-types-by-ext], @racket[#f] otherwise.
+
+@examples[#:eval mod-constructs
+          (path/string->mime-type ".m4a")
+          (path/string->mime-type "SIGIL_v1_21.wad")
+          (code:line (path/string->mime-type "mp3") (code:comment "No period, so no file extension!"))]
+
 }
 
 @section{Domains, URLs and email addresses}

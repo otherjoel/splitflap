@@ -10,11 +10,11 @@
          net/url-string
          racket/contract
          racket/match
+         racket/path
          racket/promise
          racket/runtime-path
          racket/string
          txexpr
-         web-server/private/mime-types
          xml)
 
 (provide dns-domain?
@@ -38,9 +38,11 @@
          ; Moments
          infer-moment
          moment->string
-         ; Enclosures
+         ; Enclosures and MIME types
          (struct-out enclosure)
          file->enclosure
+         mime-types-by-ext
+         path/string->mime-type
          ; Language codes
          language-codes
          iso-639-language-code?
@@ -321,7 +323,7 @@
     #px"^([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])(?:\\s+([01]?[0-9]|2[0-3]):([0-5][0-9])(?::([0-5][0-9]|60))?)?")
   (match str
     [(pregexp date/time-regex (list _ y m d hr min sec))
-       (moment (n: y) (n: m) (n: d) (n: hr) (n: min) (n: sec) 0)]
+     (moment (n: y) (n: m) (n: d) (n: hr) (n: min) (n: sec) 0)]
     [_ (raise-argument-error 'Date "string in the format ‘YYYY-MM-DD [hh:mm[:ss]]’" str)]))
 
 (define/contract (moment->string m type)
@@ -369,33 +371,31 @@
 
 ;; ~~ MIME types ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-;; This code is adapted from koyo/mime by Bogdan Popa.
-;; (Simply to avoid having a large dependency just for MIME typing)
-;; https://github.com/Bogdanp/koyo/blob/a1ce05497e72357c03b868d3aa3b9b40f462227c/koyo-lib/koyo/mime.rkt
-;; Licensed under the 3-clause BSD License.
+(define-runtime-path mime-types.rktd "private/mime-types.rktd")
 
-(define-runtime-path mime.types-path
-  (build-path "private/mime.types"))
-
-(define path->mime-type
-  (make-path->mime-type mime.types-path))
+(define/contract mime-types-by-ext (promise/c (hash/c symbol? string? #:immutable #t))
+  (delay/sync (with-input-from-file mime-types.rktd (lambda () (read)))))
 
 ;; Return a MIME type for a given file extension.
 ;; MIME types are not required; if unknown, the type should not be specified.
-(define (ext->mime-type ext)
-  (match (path->mime-type (string->path ext))
-    [(? bytes? b) (bytes->string/utf-8 b)]
+(define/contract (path/string->mime-type p)
+  (-> path-string? (or/c string? #f))
+  (match (if (path? p) (path->string p) p)
+    [(regexp #rx".*\\.([^\\.]*$)" (list _ ext))
+     (hash-ref (force mime-types-by-ext)
+               (string->symbol (string-downcase ext))
+               #f)]
     [_ #f]))
 
 (module+ test
   ;; Check some common types
-  (check-equal? (ext->mime-type ".mp3") "audio/mpeg")
-  (check-equal? (ext->mime-type ".m4a") "audio/x-m4a")
-  (check-equal? (ext->mime-type ".mpg") "video/mpeg")
-  (check-equal? (ext->mime-type ".mp4") "video/mp4")
+  (check-equal? (path/string->mime-type ".mp3") "audio/mpeg")
+  (check-equal? (path/string->mime-type ".m4a") "audio/mp4")
+  (check-equal? (path/string->mime-type ".mpg") "video/mpeg")
+  (check-equal? (path/string->mime-type ".mp4") "video/mp4")
 
   ;; Empty list returned for unknown extensions
-  (check-equal? (ext->mime-type ".asdahsf") #f))
+  (check-equal? (path/string->mime-type ".asdahsf") #f))
 
 ;; ~~ Enclosures ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -423,25 +423,21 @@
 
 (module+ test
   (require racket/file)
-  (check-exn exn:fail:contract? (λ () (enclosure "invalid-url" "audio/x-m4a" 1234)))
-  (check-exn exn:fail:contract? (λ () (enclosure "http://example.com/f.e" -900 1234)))
-  (check-exn exn:fail:contract? (λ () (enclosure "http://example.com/f.e" "audio/x-m4a" -1)))
-
   (define test-enc
-    (enclosure "gopher://example.com/greeting.m4a" "audio/x-m4a" 1234))
+    (enclosure "gopher://example.com/greeting.m4a" "audio/mp4" 1234))
 
   (check-txexprs-equal?
    (express-xml test-enc 'atom #:as 'xexpr)
    '(link [[rel "enclosure"]
            [href "gopher://example.com/greeting.m4a"]
            [length "1234"]
-           [type "audio/x-m4a"]]))
+           [type "audio/mp4"]]))
   
   (check-txexprs-equal?
    (express-xml test-enc 'rss #:as 'xexpr)
    '(enclosure [[url "gopher://example.com/greeting.m4a"]
                 [length "1234"]
-                [type "audio/x-m4a"]]))
+                [type "audio/mp4"]]))
 
   ;; Enclosure with unknown type
   (define test-enc2
@@ -465,7 +461,7 @@
     (raise-argument-error 'file->enclosure "path to an existing file" file-path))
   (define filename (car (reverse (explode-path file-path))))
   (enclosure (path->string (build-path (string->path base-url) filename))
-             (ext->mime-type (path->string filename))
+             (path/string->mime-type (path->string filename))
              (file-size file-path)))
 
 ;; ~~ ISO 639 Language codes ~~~~~~~~~~~~~~~~~~~~~
@@ -479,16 +475,15 @@
 
 (define/contract system-language (promise/c iso-639-language-code?)
   (delay/sync
-    (match
-        (case (system-type 'os)
-          [(unix macosx) (bytes->string/utf-8 (system-language+country))]
-          [(windows)
-           ((dynamic-require 'file/resource 'get-resource)
-            "HKEY_CURRENT_USER" "Control Panel\\International\\LocaleName")])
-      [(? string? loc)
-       (string->symbol (string-downcase (substring loc 0 2)))]
-      [(var v)
-       (raise
-        (exn:fail:unsupported
-         (format "attempt to determine system language resulted in: ~a" v)
-         (current-continuation-marks)))])))
+   (match (case (system-type 'os)
+            [(unix macosx) (bytes->string/utf-8 (system-language+country))]
+            [(windows)
+             ((dynamic-require 'file/resource 'get-resource)
+              "HKEY_CURRENT_USER" "Control Panel\\International\\LocaleName")])
+     [(? string? loc)
+      (string->symbol (string-downcase (substring loc 0 2)))]
+     [(var v)
+      (raise
+       (exn:fail:unsupported
+        (format "attempt to determine system language resulted in: ~a" v)
+        (current-continuation-marks)))])))

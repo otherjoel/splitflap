@@ -6,7 +6,6 @@
 (define deps '("gregor-lib"
                "rackunit-lib"
                "txexpr"
-               "web-server-lib"
                "base"))
 (define build-deps '("at-exp-lib"
                      "rackunit-lib"))

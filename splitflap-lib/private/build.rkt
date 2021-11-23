@@ -2,12 +2,15 @@
 
 (require json
          net/url
+         racket/file
+         racket/list
+         racket/match
          racket/port
          racket/runtime-path
          racket/string)
 
 ;; Utility file, not loaded by the rest of the library, used only for infrequent
-;; manual updates of entities.rktd
+;; manual updates of entities.rktd and mime-types.rktd
 
 (define-runtime-path entities.rktd "./entities.rktd")
 
@@ -31,8 +34,30 @@
             (values entity (list (string->symbol entity)))] 
            [else (values entity (hash-ref v 'codepoints))]))))))
 
-(define (test-read-rktd)
-  (with-input-from-file entities.rktd
-    (lambda () (read))))
+(define-runtime-path mime-types.rktd "./mime-types.rktd")
+
+;; Download the Apache’s public domain list of MIME types and serialize as a hash table.
+;; Converts:      application/epub+zip				epub
+;; To:            #hasheq(("epub" . "application/epub+zip") ... )
+
+;; Commented out to emphasize that this should only be run manually.
+;; This function is never “armed” in the public package!
+#;(define (download-mime-types)
+  (define mime-types-url (string->url "https://svn.apache.org/repos/asf/httpd/httpd/trunk/docs/conf/mime.types"))
+  (define mimetypes-lines (port->lines (get-pure-port mime-types-url)))
+  (define extensions-table
+    (let loop ([lines mimetypes-lines]
+               [extensions (hasheq)])
+      (cond
+        [(null? lines) extensions]
+        [(string-prefix? (car lines) "#") (loop (cdr lines) extensions)]
+        [else
+         (match-let* ([(cons line remaining) lines]
+                      [(list mime-type exts ...) (regexp-match* #px"(\\S+)" line)])
+           (define new-extensions (append-map (lambda (ext) (list (string->symbol ext) mime-type)) exts))
+           (loop remaining (apply hash-set* extensions new-extensions)))])))
+  
+  (with-output-to-file mime-types.rktd #:exists 'replace
+    (lambda () (write extensions-table))))
 
 (module+ test)
