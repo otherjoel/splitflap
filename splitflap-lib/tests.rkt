@@ -1,4 +1,4 @@
-#lang at-exp racket/base
+#lang racket/base
 
 ;; Unit tests
 
@@ -35,7 +35,7 @@
 
 (define f1 (feed site-id "https://example.com/" "Kate Poster Posts" (list entry1)))
 
-(define expect-feed-atom @~a{
+(define expect-feed-atom #<<END
 <?xml version="1.0" encoding="UTF-8"?>
 
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
@@ -52,14 +52,16 @@
     <link rel="enclosure" type="audio/x-m4a" length="1234" href="gopher://umn.edu/greeting.m4a" />
     <author>
       <name>Kate Poster</name>
-      <email>kate@"@"example.com</email>
+      <email>kate@example.com</email>
     </author>
     <id>tag:example.com,2007:blog.one</id>
     <content type="html">&lt;div&gt;&lt;p&gt;Welcome to my blog.&lt;/p&gt;&lt;ul&gt;&lt;li&gt;&amp;amp; ' &amp;lt; &amp;gt; © ℗ ™&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;</content>
   </entry>
-</feed>})
+</feed>
+END
+)
 
-(define expect-feed-rss @~a{
+(define expect-feed-rss #<<END
 <?xml version="1.0" encoding="UTF-8"?>
 
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
@@ -76,12 +78,14 @@
       <link>https://example.com/blog/one.html</link>
       <pubDate>Sat, 17 Mar 2007 00:00:00 +0000</pubDate>
       <enclosure url="gopher://umn.edu/greeting.m4a" length="1234" type="audio/x-m4a" />
-      <author>kate@"@"example.com (Kate Poster)</author>
+      <author>kate@example.com (Kate Poster)</author>
       <guid isPermaLink="false">tag:example.com,2007:blog.one</guid>
       <description>&lt;div&gt;&lt;p&gt;Welcome to my blog.&lt;/p&gt;&lt;ul&gt;&lt;li&gt;&amp;amp; ' &amp;lt; &amp;gt; © ℗ ™&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;</description>
     </item>
   </channel>
-</rss>})
+</rss>
+END
+)
 
 (parameterize ([include-generator? #f]
                [feed-language 'en])
@@ -141,17 +145,18 @@
           (enclosure "http://example.com/ep1.m4a" "audio/x-m4a" 1234)
            )))
 
-(define expect-ep1 @~a{
+(define expect-ep1 #<<END
 <item>
   <title>Kate Speaks</title>
   <link>http://example.com/ep1</link>
   <pubDate>Sun, 31 Oct 2021 00:00:00 +0000</pubDate>
   <enclosure url="http://example.com/ep1.m4a" length="1234" type="audio/x-m4a" />
-  <author>kate@"@"example.com (Kate Poster)</author>
+  <author>kate@example.com (Kate Poster)</author>
   <guid isPermaLink="false">tag:example.com,2007:blog.ep1</guid>
   <description>&lt;article&gt;&lt;p&gt;Welcome to the show&lt;/p&gt;&lt;/article&gt;</description>
 </item>
-})
+END
+)
 
 (check-equal? (express-xml test-ep1 'rss) expect-ep1 )
 (check-equal? (express-xml test-ep1 'atom) expect-ep1) ; ignores dialect
@@ -175,14 +180,14 @@
           #:block? (< 3 17 99)
            )))
 
-(define expect-ep2 @~a{
+(define expect-ep2 #<<END
 <item>
   <title>Kate Speaks</title>
   <link>http://example.com/ep2</link>
   <pubDate>Sun, 31 Oct 2021 00:00:00 +0000</pubDate>
   <enclosure url="http://example.com/ep2.m4a" length="1234" type="audio/x-m4a" />
   <itunes:episodeType>full</itunes:episodeType>
-  <author>kate@"@"example.com (Kate Poster)</author>
+  <author>kate@example.com (Kate Poster)</author>
   <guid isPermaLink="false">tag:example.com,2007:blog.ep2</guid>
   <description>&lt;article&gt;&lt;p&gt;Welcome to another show&lt;/p&gt;&lt;/article&gt;</description>
   <itunes:duration>300</itunes:duration>
@@ -192,7 +197,8 @@
   <itunes:season>1</itunes:season>
   <itunes:block>Yes</itunes:block>
 </item>
-})
+END
+)
 
 (check-equal? (express-xml test-ep2 'rss) expect-ep2 )
 (check-equal? (express-xml test-ep2 'atom) expect-ep2) ; ignores dialect
@@ -208,7 +214,7 @@
            (person "Kate Poster" "kate@example.com")
            #:explicit? #t))
 
-(define expect-podcast @~a{
+(define expect-podcast #<<END
 <?xml version="1.0" encoding="UTF-8"?>
 
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
@@ -222,7 +228,7 @@
     <language>en</language>
     <itunes:owner>
       <itunes:name>Kate Poster</itunes:name>
-      <itunes:email>kate@"@"example.com</itunes:email>
+      <itunes:email>kate@example.com</itunes:email>
     </itunes:owner>
     <itunes:image href="https://example.com/cover-art.jpg" />
     <itunes:category text="Leisure">
@@ -234,13 +240,14 @@
       <link>http://example.com/ep1</link>
       <pubDate>Sun, 31 Oct 2021 00:00:00 +0000</pubDate>
       <enclosure url="http://example.com/ep1.m4a" length="1234" type="audio/x-m4a" />
-      <author>kate@"@"example.com (Kate Poster)</author>
+      <author>kate@example.com (Kate Poster)</author>
       <guid isPermaLink="false">tag:example.com,2007:blog.ep1</guid>
       <description>&lt;article&gt;&lt;p&gt;Welcome to the show&lt;/p&gt;&lt;/article&gt;</description>
     </item>
   </channel>
 </rss>
-})
+END
+)
 
 (parameterize ([include-generator? #f]
                [feed-language 'en])
