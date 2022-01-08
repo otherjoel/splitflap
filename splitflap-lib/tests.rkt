@@ -4,7 +4,6 @@
 
 (require "main.rkt"
          gregor
-         racket/format
          rackunit)
 
 (define site-id (mint-tag-uri "example.com" "2007" "blog"))
