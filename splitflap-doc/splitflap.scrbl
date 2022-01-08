@@ -25,9 +25,8 @@ With this library, you are only made to supply the minimum set of data needed to
 But everything you supply is carefully validated, so that the result is either a fully valid feed or
 an exception.
 
-@bold{Splitflap is in beta release.} The interface is mostly stable and documentation is fairly
-complete. There are some wrinkles to iron out. Please report any problems on
-@hyperlink["https://github.com/otherjoel/splitflap/issues"]{the Github repo}.
+Please report any problems on @hyperlink["https://github.com/otherjoel/splitflap/issues"]{the Github
+repo}.
 
 @bold{Installation:} To install this package from the command line:
 

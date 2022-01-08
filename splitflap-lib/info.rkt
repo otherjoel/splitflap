@@ -1,7 +1,7 @@
 #lang info
 
 (define collection "splitflap")
-(define version "0.9")
+(define version "1.0")
 
 (define deps '("gregor-lib"
                "rackunit-lib"
