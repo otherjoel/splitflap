@@ -6,6 +6,7 @@
          "xml-generic.rkt"
          "validation.rkt"
          gregor
+         (only-in net/url url?)
          txexpr
          racket/contract
          racket/generic
@@ -13,12 +14,14 @@
          racket/match
          racket/promise
          racket/runtime-path
+         (only-in racket/string non-empty-string?)
          setup/getinfo
          xml)
 
-(provide feed-language
-         food?
+(provide food?
          (contract-out
+          [feed-xslt-stylesheet (parameter/c (or/c non-empty-string? url? #f))]
+          [feed-language (parameter/c (or/c iso-639-language-code? #f))]
           [rename make-feed-item feed-item
                   (->* (tag-uri? valid-url-string? string? person? moment? moment? xexpr?)
                        ((or/c enclosure? #f))
@@ -55,16 +58,9 @@
          include-generator?
          express-xml)
 
-
 ;; ~~ Ancillary elements ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-(define feed-language
-  (make-parameter
-   #f
-   (λ (v)
-     (unless (or (iso-639-language-code? v) (not v))
-       (raise-argument-error 'feed-locale "either iso-639-language-code? or #false" v))
-     v)))
+(define feed-language (make-parameter #f))
 
 ;; Build the <generator> tag (caches for each dialect)
 (define generator

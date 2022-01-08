@@ -4,9 +4,11 @@
    "misc.rkt"
    scribble/examples
    (for-label splitflap 
-              (except-in gregor date? date) 
+              (except-in gregor date? date)
+              (only-in net/url url?)
               racket/base 
               racket/promise
+              (only-in racket/string non-empty-string?)
               txexpr
               xml)
    (for-syntax racket/base racket/syntax))
@@ -103,10 +105,20 @@ The @racket[_feed-url] argument must be supplied as a valid URL string when @rac
 It is not a required argument when @racket[_data] is any other type, and in those cases it will be
 ignored if supplied.
  
-If the parameter @racket[include-generator?] is @racket[#t], a @tt{generator} element will be
-included in complete feeds. If the parameter @racket[feed-language] is not set to @racket[#f], it
-will be used as the language code for the feed; otherwise the result of @racket[(force
-system-language)] is used.
+For complete feeds (e.g., when @racket[_data] is a @racket[feed] or @racket[podcast]) the output can
+be further affected by other parameters. View their documentation for more information.
+
+@itemlist[#:style 'compact
+
+@item{If @racket[include-generator?] is @racket[#t], a @tt{generator} element will be included.}
+
+@item{If @racket[feed-language] is not @racket[#f], its value will be used as the language code for
+the feed; otherwise the result of @racket[(force system-language)] is used.}
+
+@item{If @racket[feed-xslt-stylesheet] is not @racket[#f], its value will be used as the path to a
+stylesheet for the feed.}
+
+]
 
 @examples[#:eval mod-feed
           (define item
@@ -136,6 +148,23 @@ as the generator of the feed.
 
 A parameter that, when not set to @racket[#f], is used by @racket[express-xml] as the language for a
 @racket[feed] or @racket[podcast] in place of @racket[system-language].
+
+}
+
+@defparam[feed-xslt-stylesheet path (or/c url? non-empty-string? #f) #:value #f]{
+
+If this parameter is not @racket[#f], @racket[express-xml] will use its value as the path to an
+@link["https://en.wikipedia.org/wiki/XSLT"]{XSLT stylesheet} in the prolog of the XML document
+produced for a @racket[feed] or @racket[podcast].
+
+Generally, the XSLT file must be served from the same domain as the feed itself, otherwise the
+styling will not be applied.
+
+@margin-note{Stylesheets can solve the problem of feeds looking and behaving in unfriendly ways when
+accessed directly in a web browser. See
+@link["https://github.com/genmon/aboutfeeds/issues/8#issuecomment-673293655"]{this Github issue} for
+examples of people who have used XSLT stylesheets to add informative links and a welcoming layout to
+their feeds.}
 
 }
 

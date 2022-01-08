@@ -4,6 +4,7 @@
 
 (require "main.rkt"
          gregor
+         net/url
          rackunit)
 
 (define site-id (mint-tag-uri "example.com" "2007" "blog"))
@@ -90,6 +91,42 @@ END
                [feed-language 'en])
   (check-equal? (express-xml f1 'atom "https://example.com/feed.atom") expect-feed-atom)
   (check-equal? (express-xml f1 'rss "https://example.com/feed.rss") expect-feed-rss))
+
+;; Setup: XSLT Stylesheet inclusion
+(define expect-feed-atom-xslt #<<END
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="/feed.xsl" type="text/xsl"?>
+
+<feed xmlns="http://www.w3.org/2005/Atom" xml:lang="en">
+  <title type="text">Kate Poster Posts</title>
+  <link rel="self" href="https://example.com/feed.atom" />
+  <link rel="alternate" href="https://example.com/" />
+  <updated>2007-03-17T00:00:00Z</updated>
+  <id>tag:example.com,2007:blog</id>
+  <entry>
+    <title type="text">Kate's First Post</title>
+    <link rel="alternate" href="https://example.com/blog/one.html" />
+    <updated>2007-03-17T00:00:00Z</updated>
+    <published>2007-03-17T00:00:00Z</published>
+    <link rel="enclosure" type="audio/x-m4a" length="1234" href="gopher://umn.edu/greeting.m4a" />
+    <author>
+      <name>Kate Poster</name>
+      <email>kate@example.com</email>
+    </author>
+    <id>tag:example.com,2007:blog.one</id>
+    <content type="html">&lt;div&gt;&lt;p&gt;Welcome to my blog.&lt;/p&gt;&lt;ul&gt;&lt;li&gt;&amp;amp; ' &amp;lt; &amp;gt; © ℗ ™&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;</content>
+  </entry>
+</feed>
+END
+)
+
+;; Check expected results of setting feed-xslt-stylesheet to a string and a url struct
+(parameterize ([include-generator? #f]
+               [feed-language 'en])
+  (parameterize ([feed-xslt-stylesheet "/feed.xsl"])
+    (check-equal? (express-xml f1 'atom "https://example.com/feed.atom") expect-feed-atom-xslt))
+  (parameterize ([feed-xslt-stylesheet (string->url "/feed.xsl")])
+    (check-equal? (express-xml f1 'atom "https://example.com/feed.atom") expect-feed-atom-xslt)))
 
 ;; Setup: Duplicate tag URIs cause exception at time of feed construction
 (define entry2-suffix "conflict")

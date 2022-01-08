@@ -1,6 +1,7 @@
 #lang racket/base
 
 (require (for-syntax racket/base)
+         (only-in net/url url? url->string)
          racket/file
          racket/list
          racket/match
@@ -37,10 +38,23 @@
   (check-equal? (as-cdata '(div (p "Hi ]]> whoops how did that get there")))
                 (cdata 'racket 'racket "<![CDATA[<div><p>Hi ]]&gt; whoops how did that get there</p></div>]]>")))
 
+;; Optional path to XSLT stylesheet
+(define feed-xslt-stylesheet (make-parameter #f))
+
 ;; Convert an x-expression to a complete XML document
 (define (xml-document xpr)
+  (define xslt-path
+    (match (feed-xslt-stylesheet)
+      [(? url? u) (url->string u)]
+      [v v]))
+  (define xml-processing
+    (cons (p-i 'racket 'racket 'xml "version=\"1.0\" encoding=\"UTF-8\"")
+          (if xslt-path
+              (list (p-i 'racket 'racket 'xml-stylesheet
+                         (format "href=\"~a\" type=\"text/xsl\"" xslt-path)))
+              '())))
   (document
-   (prolog (list (p-i 'racket 'racket 'xml "version=\"1.0\" encoding=\"UTF-8\"")) #f '())
+   (prolog xml-processing #f '())
    (xexpr->xml xpr)
    '()))
 
@@ -135,9 +149,9 @@
   `(,element
     ,@(if/sp (and (txexpr? content) (eq? dialect 'atom)) `[[type "html"]])
     ,(cond
-      [(string? content)
-       (let ([result (as-cdata content)]) (if preserve-cdata-struct? result (cdata-string result)))]
-      [else (txexpr->safe-content-str content)])))
+       [(string? content)
+        (let ([result (as-cdata content)]) (if preserve-cdata-struct? result (cdata-string result)))]
+       [else (txexpr->safe-content-str content)])))
 
 (module+ test
   (define content2 "<div>Hi ]]> whoops how did that get there</div>")
