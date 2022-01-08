@@ -30,6 +30,9 @@ Splitflap makes heavy use of custom @seclink["contract-boundaries" #:doc '(lib
 "scribblings/guide/guide.scrbl")]{contracts} to ensure conformity to the spec at every level. In
 cases where it makes things simpler, Splitflap is a bit @emph{more} strict than the actual spec.
 
+The bindings documented in this section are provided by the main @racketmodname[splitflap] module
+as well as by @racketmodname[splitflap/constructs].
+
 @section{Tag URIs}
 
 Feeds, and items contained in feeds, require some globally unique identifier. Although any kind of
