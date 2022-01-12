@@ -35,9 +35,6 @@ repo}.
 
 Or using DrRacket: click the @onscreen{File} menu → @onscreen{Install Package …}.
 
-The source code for this library is provided @hyperlink["https://github.com/otherjoel/splitflap"]{on
-GitHub}.
-
 @local-table-of-contents[]
 
 @include-section["tutorial.scrbl"]
