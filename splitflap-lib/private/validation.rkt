@@ -477,7 +477,10 @@
 (define system-language 
   (delay/sync
    (match (case (system-type 'os)
-            [(unix macosx) (bytes->string/utf-8 (system-language+country))]
+            [(unix macosx)
+             (match (system-language+country)
+               [(? bytes? b) (bytes->string/utf-8 b)] ; Bug in pre-8.4 CS returns bytes
+               [(var v) v])]
             [(windows)
              ((dynamic-require 'file/resource 'get-resource)
               "HKEY_CURRENT_USER" "Control Panel\\International\\LocaleName")])
