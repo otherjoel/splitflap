@@ -151,8 +151,8 @@ Returns a @racketresultfont{#<person>} struct for use in a @racket[feed-item], @
 @racket[episode] or @racket[podcast].
                   
 The @Atom1.0[] and @RSS2.0[] specs both have opinions about how people should be referenced in
-feeds. Atom requires only a name but also allows up to one email address and up to one URI. The RSS
-considers people to be synonymous with email addresses. So @racket[person] requires both a
+feeds. Atom requires only a name but also allows up to one email address and up to one URI. RSS
+requires one email address optionally followed by anything. So @racket[person] requires both a
 @racket[_name] and an @racket[_email], and the @racket[_url] is optional.
 
 }
