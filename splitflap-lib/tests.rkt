@@ -27,7 +27,7 @@
     (feed-item (append-specific site-id "one")
                 "https://example.com/blog/one.html"
                 "Kate's First Post"
-                (person "Kate Poster" "kate@example.com")
+                (person "Kate Poster" "kate@example.com" "http://example.com/")
                 (infer-moment "2007-03-17")
                 (infer-moment "2007-03-17")
                 `(div (p "Welcome to my blog.") (ul (li "& ' < > © ℗ ™")))
@@ -53,6 +53,7 @@
     <author>
       <name>Kate Poster</name>
       <email>kate@example.com</email>
+      <uri>http://example.com/</uri>
     </author>
     <id>tag:example.com,2007:blog.one</id>
     <content type="html">&lt;div&gt;&lt;p&gt;Welcome to my blog.&lt;/p&gt;&lt;ul&gt;&lt;li&gt;&amp;amp; ' &amp;lt; &amp;gt; © ℗ ™&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;</content>
@@ -112,6 +113,7 @@ END
     <author>
       <name>Kate Poster</name>
       <email>kate@example.com</email>
+      <uri>http://example.com/</uri>
     </author>
     <id>tag:example.com,2007:blog.one</id>
     <content type="html">&lt;div&gt;&lt;p&gt;Welcome to my blog.&lt;/p&gt;&lt;ul&gt;&lt;li&gt;&amp;amp; ' &amp;lt; &amp;gt; © ℗ ™&lt;/li&gt;&lt;/ul&gt;&lt;/div&gt;</content>
