@@ -340,7 +340,7 @@
     [(atom itunes)
      (txexpr entity '() `((,name-tag ,name)
                           (,email-tag ,email)
-                          ,@(if/sp uri `(,uri-tag uri))))]
+                          ,@(if/sp uri `(,uri-tag ,uri))))]
     [(rss)
      (txexpr entity '() (list (format "~a (~a)" email name)))]))
   
