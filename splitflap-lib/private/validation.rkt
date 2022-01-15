@@ -10,7 +10,6 @@
          racket/promise
          racket/runtime-path
          racket/string
-         txexpr
          xml)
 
 (provide dns-domain?
@@ -338,11 +337,11 @@
   (match-define (person name email uri) p)
   (case dialect
     [(atom itunes)
-     (txexpr entity '() `((,name-tag ,name)
-                          (,email-tag ,email)
-                          ,@(if/sp uri `(,uri-tag ,uri))))]
+     `(,entity (,name-tag ,name)
+               (,email-tag ,email)
+               ,@(if/sp uri `(,uri-tag ,uri)))]
     [(rss)
-     (txexpr entity '() (list (format "~a (~a)" email name)))]))
+     `(,entity ,(format "~a (~a)" email name))]))
   
 (module+ test
   (define joel (make-person "Joel" "joel@example.com"))
@@ -397,9 +396,9 @@
        (case dialect
          [(atom)
           `(link [[rel "enclosure"]
-                  ,@(if type `((type ,type)) '())
+                  [href ,url]
                   [length ,(number->string size)]
-                  [href ,url]])]
+                  ,@(if type `((type ,type)) '())])]
          [(rss)
           `(enclosure [[url ,url]
                        [length ,(number->string size)]
@@ -414,14 +413,14 @@
   (define test-enc
     (enclosure "gopher://example.com/greeting.m4a" "audio/mp4" 1234))
 
-  (check-txexprs-equal?
+  (check-equal?
    (express-xml test-enc 'atom #:as 'xexpr)
    '(link [[rel "enclosure"]
            [href "gopher://example.com/greeting.m4a"]
            [length "1234"]
            [type "audio/mp4"]]))
   
-  (check-txexprs-equal?
+  (check-equal?
    (express-xml test-enc 'rss #:as 'xexpr)
    '(enclosure [[url "gopher://example.com/greeting.m4a"]
                 [length "1234"]
@@ -431,13 +430,13 @@
   (define test-enc2
     (enclosure "gopher://example.com/greeting.m4a" #f 1234))
   
-  (check-txexprs-equal?
+  (check-equal?
    (express-xml test-enc2 'atom #:as 'xexpr)
    '(link [[rel "enclosure"]
            [href "gopher://example.com/greeting.m4a"]
            [length "1234"]]))
   
-  (check-txexprs-equal?
+  (check-equal?
    (express-xml test-enc2 'rss  #:as 'xexpr)
    '(enclosure [[url "gopher://example.com/greeting.m4a"]
                 [length "1234"]])))
@@ -456,7 +455,7 @@
   (require racket/file racket/runtime-path)
   (define-runtime-path temp "temp.mp3")
   (display-to-file (make-bytes 100 65) temp #:exists 'truncate)
-  (check-txexprs-equal?
+  (check-equal?
    (express-xml (file->enclosure temp "http://example.com") 'atom #:as 'xexpr)
    '(link [[rel "enclosure"]
            [href "http://example.com/temp.mp3"]

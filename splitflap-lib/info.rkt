@@ -5,7 +5,6 @@
 
 (define deps '("gregor-lib"
                "rackunit-lib"
-               "txexpr"
                "base"))
 (define build-deps '("rackunit-lib"))
 (define compile-omit-paths '("private/build.rkt"))
