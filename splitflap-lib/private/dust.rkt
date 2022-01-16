@@ -2,6 +2,7 @@
 
 (require (for-syntax racket/base)
          (only-in net/url url? url->string)
+         racket/contract
          racket/file
          racket/list
          racket/match
@@ -15,11 +16,26 @@
 (module+ test
   (require rackunit))
 
+(define-syntax (define-explained-contract stx)
+  (syntax-case stx ()
+    [(_ (NAME VAL) EXPECTED TEST-EXPR)
+     #'(define NAME
+         (flat-contract-with-explanation
+          (λ (VAL)
+            (cond
+              [TEST-EXPR]
+              [else
+               (λ (blame)
+                 (raise-blame-error blame VAL '(expected: EXPECTED given: "~e") VAL))]))
+          #:name 'NAME))]))
+
 ;; ~~ Tagged X-expressions ~~~~~~~~~~~~~~~~~~~~~~~
 
 ;; Lightweight functions for internal use only; avoids a dependency on txexpr package.
 
-(define (txexpr? v) (and (list? v) (xexpr? v)))
+(define-explained-contract (txexpr? v)
+  "tagged X-expression"
+  (and (list? v) (xexpr? v)))
 
 (define (get-attrs tx)
   (match tx

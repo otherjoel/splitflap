@@ -1,7 +1,6 @@
 #lang racket/base
 
-(require (for-syntax racket/base)
-         "dust.rkt"
+(require "dust.rkt"
          "xml-generic.rkt"
          gregor
          net/url-string
@@ -36,20 +35,6 @@
          iso-639-language-code?
          language-codes
          system-language)
-
-;; (private) convenience macro
-(define-syntax (define-explained-contract stx)
-  (syntax-case stx ()
-    [(_ (NAME VAL) EXPECTED TEST-EXPR)
-     #'(define NAME
-         (flat-contract-with-explanation
-          (λ (VAL)
-            (cond
-              [TEST-EXPR]
-              [else
-               (λ (blame)
-                 (raise-blame-error blame VAL '(expected: EXPECTED given: "~e") VAL))]))
-          #:name 'NAME))]))
 
 ;; ~~ DNS Domain validation (RFC 1035) ~~~~~~~~~~~
 ;;
