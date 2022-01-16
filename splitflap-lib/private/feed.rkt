@@ -7,7 +7,6 @@
          "validation.rkt"
          gregor
          (only-in net/url url?)
-         txexpr
          racket/contract
          racket/generic
          racket/list

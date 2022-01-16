@@ -49,7 +49,7 @@
     <link rel="alternate" href="https://example.com/blog/one.html" />
     <updated>2007-03-17T00:00:00Z</updated>
     <published>2007-03-17T00:00:00Z</published>
-    <link rel="enclosure" type="audio/x-m4a" length="1234" href="gopher://umn.edu/greeting.m4a" />
+    <link rel="enclosure" href="gopher://umn.edu/greeting.m4a" length="1234" type="audio/x-m4a" />
     <author>
       <name>Kate Poster</name>
       <email>kate@example.com</email>
@@ -109,7 +109,7 @@ END
     <link rel="alternate" href="https://example.com/blog/one.html" />
     <updated>2007-03-17T00:00:00Z</updated>
     <published>2007-03-17T00:00:00Z</published>
-    <link rel="enclosure" type="audio/x-m4a" length="1234" href="gopher://umn.edu/greeting.m4a" />
+    <link rel="enclosure" href="gopher://umn.edu/greeting.m4a" length="1234" type="audio/x-m4a" />
     <author>
       <name>Kate Poster</name>
       <email>kate@example.com</email>

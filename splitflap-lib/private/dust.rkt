@@ -2,19 +2,61 @@
 
 (require (for-syntax racket/base)
          (only-in net/url url? url->string)
+         racket/contract
          racket/file
          racket/list
          racket/match
          racket/port
          racket/runtime-path
          racket/string
-         txexpr
          xml)
 
 (provide (all-defined-out))
 
 (module+ test
   (require rackunit))
+
+(define-syntax (define-explained-contract stx)
+  (syntax-case stx ()
+    [(_ (NAME VAL) EXPECTED TEST-EXPR)
+     #'(define NAME
+         (flat-contract-with-explanation
+          (λ (VAL)
+            (cond
+              [TEST-EXPR]
+              [else
+               (λ (blame)
+                 (raise-blame-error blame VAL '(expected: EXPECTED given: "~e") VAL))]))
+          #:name 'NAME))]))
+
+;; ~~ Tagged X-expressions ~~~~~~~~~~~~~~~~~~~~~~~
+
+;; Lightweight functions for internal use only; avoids a dependency on txexpr package.
+
+(define-explained-contract (txexpr? v)
+  "tagged X-expression"
+  (and (list? v) (xexpr? v)))
+
+(define (get-attrs tx)
+  (match tx
+    [(list* (? symbol?) (list (list (? symbol?) (? string?)) ...) elems) (cadr tx)]
+    [(list* (? symbol?) elems) '()]))
+
+(define (get-elements tx)
+  (match tx
+    [(list* tag (list (list (? symbol?) (? string?)) ...) elements) elements]
+    [(list* tag elements) elements]))
+
+(module+ test
+  (check-equal? (get-attrs '(br)) '())
+  (check-equal? (get-attrs '(div "hello")) '())
+  (check-equal? (get-attrs '(div amp "hello")) '())
+  (check-equal? (get-attrs '(div [[id "main"]] amp "hello")) '((id "main")))
+
+  (check-equal? (get-elements '(br)) '())
+  (check-equal? (get-elements '(div amp "hello")) '(amp "hello"))
+  (check-equal? (get-elements '(div [[id "main"]])) '())
+  (check-equal? (get-elements '(div [[id "main"]] amp "hello")) '(amp "hello")))
 
 ;; ~~ XML Utility functions ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -129,14 +171,13 @@
    (let loop ([x tx])
      (cond
        [(txexpr? x)
-        (txexpr
-         (car x)
-         (get-attrs x)
-         (append-map (λ (c)
-                       (if (string? c)
-                           (numberize-named-entities c)
-                           (list (loop c))))
-                     (get-elements x)))]
+        `(,(car x)
+          ,@(list (get-attrs x))
+          ,@(append-map (λ (c)
+                         (if (string? c)
+                             (numberize-named-entities c)
+                             (list (loop c))))
+                       (get-elements x)))]
        [else x]))))
 
 (module+ test
