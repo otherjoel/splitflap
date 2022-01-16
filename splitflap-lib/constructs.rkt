@@ -4,6 +4,7 @@
 ;; Predicates and constructors for Dates, Persons, Tag URIs, URLs, email addresses and enclosures
 
 (require "private/validation.rkt"
+         (only-in "private/dust.rkt" txexpr?)
          gregor
          racket/contract)
 
@@ -27,8 +28,9 @@
          
          ; Persons
          person?
-         (contract-out [person (->* (string? email-address?) ((or/c valid-url-string? #f)) person?)])
-         person->xexpr
+         (contract-out
+          [person (->* (string? email-address?) ((or/c valid-url-string? #f)) person?)]
+          [person->xexpr (-> person? symbol? (or/c rss-dialect? 'itunes) txexpr?)])
          
          ; Moments
          (contract-out

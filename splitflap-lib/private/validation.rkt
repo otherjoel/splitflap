@@ -314,8 +314,7 @@
 (define (make-person name email [uri #f])
   (person_ name email uri))
   
-(define/contract (person->xexpr p entity dialect)
-  (-> person? symbol? (or/c rss-dialect? 'itunes) txexpr?)
+(define (person->xexpr p entity dialect)
   (match-define (list name-tag email-tag uri-tag)
     (cond [(eq? dialect 'itunes) '(itunes:name itunes:email itunes:uri)]
           [else '(name email uri)]))
