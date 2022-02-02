@@ -1,8 +1,12 @@
 #lang scribble/manual
 
-@(require "misc.rkt" (for-label splitflap xml))
+@(require "misc.rkt"
+          splitflap/private/version
+          (for-label splitflap xml))
 
-@title{Package Notes}
+@title{Package Notes (@splitflap-version[])}
+
+Splitflap can be considered stable. No backward-incompatible changes are planned.
 
 @section{Known Issues}
 
