@@ -24,6 +24,24 @@ plan to add a parameter which would cause @racket[dns-domain?] and @racket[email
 validate strings according to some alternative scheme that allows for non-ASCII characters. In order
 to do this correctly, though, I need to educate myself about any standards that exist in this area.
 
+@section{Version History}
+
+@subsection{Version 1.1}
+
+@itemlist[#:style 'compact
+
+@item{Fix unquoting bug in @racket[person] x-expressions
+(@link["https://github.com/otherjoel/splitflap/pull/7"]{#7})}
+
+@item{Remove dependency on @racketmodname[txexpr] package
+(@link["https://github.com/otherjoel/splitflap/pull/8"]{#8})}
+
+@item{Ensure @racket[system-language] works with Racket CS 8.4+
+(@link["https://github.com/otherjoel/splitflap/commit/0da67ccdc7c0e7f84c5a34cd88f627d65fbb86f4"]{@tt{0da67ccd}})}
+
+]
+
+
 @section{Licensing}
 
 Splitflap is provided under the terms of the
