@@ -2,20 +2,21 @@
 
 ;; ~~ RSS Feed Generation ~~~~~~~~~~~~~~~~~~~~~~~~
 
-(require "dust.rkt"
-         "xml-generic.rkt"
-         "validation.rkt"
-         gregor
-         (only-in net/url url?)
+(require gregor
+         (only-in net/url
+                  url?)
          racket/contract
          racket/generic
          racket/list
          racket/match
          racket/promise
-         racket/runtime-path
-         (only-in racket/string non-empty-string?)
-         setup/getinfo
-         xml)
+         (only-in racket/string
+                  non-empty-string?)
+         xml
+         "dust.rkt"
+         "validation.rkt"
+         "version.rkt"
+         "xml-generic.rkt")
 
 (provide food?
          (contract-out
@@ -300,9 +301,3 @@
                              "Feed tag URI" (tag-uri->string id)
                              "Episode tag URIs" (map tag-uri->string episode-tags))))
   (podcast_ id site-url name episodes category image-url owner explicit? type block? complete? new-feed-url))
-
-;; Version
-(define-runtime-path lib-folder "..")
-
-(define (splitflap-version)
-  ((get-info/full lib-folder) 'version))
