@@ -26,6 +26,17 @@ to do this correctly, though, I need to educate myself about any standards that 
 
 @section{Version History}
 
+@subsection{Version 1.2}
+
+@itemlist[#:style 'compact
+
+@item{Fix exception raised in @racket[express-xml] when no entries are present
+(@link["https://github.com/otherjoel/splitflap/issues/9"]{#9})}
+
+@item{Added zero-arity form of @racket[infer-moment] to get current moment}
+
+]
+
 @subsection{Version 1.1}
 
 @itemlist[#:style 'compact
