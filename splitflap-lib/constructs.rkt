@@ -34,7 +34,7 @@
          
          ; Moments
          (contract-out
-          [infer-moment (-> string? moment?)]
+          [infer-moment (->* () (string?) moment?)]
           [moment->string (-> moment? (or/c 'rss 'atom) string?)])             
          
          ; Enclosures and MIME types

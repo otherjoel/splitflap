@@ -199,10 +199,13 @@ ommitted, @racketvalfont{00:00:00} (the very start of the date) is assumed.
           (infer-moment "2012-08-31 13:34")
           (infer-moment "2015-10-02 01:03:15")
 
-          (parameterize ([current-timezone 0])
+          (parameterize ([current-timezone -14400])
             (infer-moment "2015-10-02 01:03:15"))
 
-          (infer-moment "2012-09-14 12")]
+          (infer-moment "2012-09-14 12")
+          (infer-moment)]
+
+@history[#:changed "1.2" "Added no-argument form for current moment"]
 
 }
 

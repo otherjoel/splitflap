@@ -79,9 +79,6 @@ Returns a @racketresultfont{#<feed>} struct. You can inspect its contents with @
 If any of the @tech{tag URIs} of the @racket[_entries] are @racket[tag=?] with each other or with the
 feed @racket[_id], an exception is raised identifying the first duplicate encountered.
 
-The @racket[_entries] will be sorted in reverse chronological order by their “updated” timestamps.
-The most recent timestamp is also used as the feed’s own last-updated timestamp.
-
 }
 
 @section{Producing feed XML}
@@ -105,8 +102,14 @@ The @racket[_feed-url] argument must be supplied as a valid URL string when @rac
 It is not a required argument when @racket[_data] is any other type, and in those cases it will be
 ignored if supplied.
  
-For complete feeds (e.g., when @racket[_data] is a @racket[feed] or @racket[podcast]) the output can
-be further affected by other parameters. View their documentation for more information.
+For complete feeds (e.g., when @racket[_data] is a @racket[feed] or @racket[podcast]), the
+entries/episodes will be sorted in reverse chronological order by their “updated” timestamps, and
+the most recent such timestamp is used as the value for feed-level “last updated” and/or “published”
+elements. If the feed contains no entries or episodes, these feed-level timestamps will use
+@racket[now/moment].
+
+The output of complete feeds can be further affected by other parameters (view their documentation
+for more information):
 
 @itemlist[#:style 'compact
 
