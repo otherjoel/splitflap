@@ -184,12 +184,13 @@ Splitflap leans on the @racketmodname[gregor] library for this functionality ---
 "gregor/scribblings/gregor.scrbl")] --- and provides a couple of helper functions to make things a
 bit more ergonomic.
 
-@defproc[(infer-moment [str string?]) moment?]{
+@defproc[(infer-moment [str string? ""]) moment?]{
 
 Parses from @racket[_str] and returns a precise @racket[moment], inferring time information where
 ommitted and using @racket[current-timezone] as the time zone for the moment.
 
-The @racket[_str] argument must be in the form @racket{YYYY-MM-DD [hh:mm[:ss]]} or an exception is
+If @racket[_str] is @racketvalfont{""}, then the result of @racket[now/moment] is returned.
+Otherwise @racket[_str] must be in the form @racket{YYYY-MM-DD [hh:mm[:ss]]} or an exception is
 raised. If the seconds are ommitted, @racketvalfont{00} is assumed, and if the hours and minutes are
 ommitted, @racketvalfont{00:00:00} (the very start of the date) is assumed.
 

@@ -288,13 +288,21 @@
 
 (define (n: v) (cond [(not v) 0] [(string? v) (string->number v)] [else v]))
 
-(define (infer-moment str)
-  (define date/time-regex
+(define date/time-regex
     #px"^([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])(?:\\s+([01]?[0-9]|2[0-3]):([0-5][0-9])(?::([0-5][0-9]|60))?)?")
+
+(define (infer-moment [str ""])
   (match str
+    ["" (now/moment)]
     [(pregexp date/time-regex (list _ y m d hr min sec))
      (moment (n: y) (n: m) (n: d) (n: hr) (n: min) (n: sec) 0)]
     [_ (raise-argument-error 'Date "string in the format ‘YYYY-MM-DD [hh:mm[:ss]]’" str)]))
+
+(module+ test
+  (check-true (moment<=? (now/moment) (infer-moment)))
+  (check-equal? (infer-moment "2022-04-08")
+                (moment 2022 4 8))
+  (check-exn exn:fail:contract? (lambda () (infer-moment "2022"))))
 
 (define (moment->string m type)
   (~t m (case type
