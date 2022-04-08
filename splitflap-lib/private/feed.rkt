@@ -141,7 +141,7 @@
        (raise-argument-error 'express-xml "valid URL (required for #<feed>)" feed-url))
      (match-define (feed feed-id site-url feed-name entries) f)
      (define entries-sorted (sort entries entry-newer?))
-     (define last-updated (feed-item-updated (car entries-sorted)))
+     (define last-updated (if (pair? entries-sorted) (feed-item-updated (car entries-sorted)) (infer-moment)))
      (define to-xml? (memq result-type '(xml xml-string)))
   
      (define feed-xpr
@@ -255,7 +255,7 @@
           `(itunes:category [[text ,cat1]]
                             (itunes:category [[text ,cat2]]))]
          [(? string? c) `(itunes:category [[text ,c]])]))
-     (define last-updated (episode-updated (car episodes-sorted)))
+     (define last-updated (if (pair? episodes-sorted) (episode-updated (car episodes-sorted)) (infer-moment)))
      (define to-xml? (memq result-type '(xml xml-string)))
 
      (define feed-xpr

@@ -170,6 +170,10 @@ END
          "Kate Poster Posts"
          (list entry1 entry2 entry3-conflict))))
 
+;; Empty feeds should be allowed
+(check-not-exn (lambda () (express-xml (feed site-id "https://example.com" "Posts" '()) 'atom "https://example.com")))
+(check-not-exn (lambda () (express-xml (feed site-id "https://example.com" "Posts" '()) 'rss "https://example.com")))
+
 ;; Check podcast episode output
 (define test-ep1
   (parameterize ([current-timezone 0])
@@ -342,3 +346,17 @@ END
            "https://example.com/cover-art.jpg"
            (person "Kate Poster" "kate@example.com")
            #:explicit? #t)))
+
+;; Empty podcast feeds should be allowed
+(check-not-exn
+ (lambda ()
+   (express-xml (podcast site-id
+                         "https://example.com"
+                         "Podcast"
+                         '()
+                         (list "Sports" "Swimming")
+                         "https://example.com/cover-art.jpg"
+                         (person "Kate Poster" "kate@example.com")
+                         #:explicit? #f)
+                'rss
+                "https://example.com")))
