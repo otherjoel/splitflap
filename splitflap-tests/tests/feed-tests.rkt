@@ -2,7 +2,7 @@
 
 ;; Unit tests
 
-(require "main.rkt"
+(require splitflap
          gregor
          net/url
          rackunit)

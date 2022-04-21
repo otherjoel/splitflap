@@ -36,6 +36,8 @@
          language-codes
          system-language)
 
+
+
 ;; ~~ DNS Domain validation (RFC 1035) ~~~~~~~~~~~
 ;;
 ;;  <domain> ::= <subdomain> | " "
@@ -69,37 +71,7 @@
             [else 256])) ; use the length limit to disqualify the whole string if any one label is invalid
     256)))
 
-(module+ test
-  (require rackunit)
 
-  (define longest-valid-label (make-string 62 #\a))
-  (define longest-valid-domain
-    (string-append longest-valid-label ; 63 bytes (including length header)
-                   "." longest-valid-label ; 126
-                   "." longest-valid-label ; 189
-                   "." longest-valid-label ; 252
-                   ".aa"))               ; 255 bytes
-  
-  (check-true (dns-domain? "example.com"))
-  (check-true (dns-domain? "example.com"))
-  (check-true (dns-domain? "ex-ample.com"))
-  (check-true (dns-domain? "EXAMPLE.COM"))
-  (check-true (dns-domain? "a12-345.b6-78"))
-  (check-true (dns-domain? "a"))
-  (check-true (dns-domain? "a.b.c.d.e.f.g.h"))
-  (check-true (dns-domain? longest-valid-label))
-  (check-true (dns-domain? (string-append longest-valid-label ".com")))
-  (check-true (dns-domain? longest-valid-domain))
-  
-  (check-false (dns-domain? " example.com")) ; leading space
-  (check-false (dns-domain? "example.com ")) ; trailing space
-  (check-false (dns-domain? "ex ample.com")) ; internal space
-  (check-false (dns-domain? "example-.com")) ; label ending in hyphen
-  (check-false (dns-domain? "example.com-")) ; another
-  (check-false (dns-domain? "12345.b"))        ; label starting with number
-  (check-false (dns-domain? "a12345.678"))     ; another
-  (check-false (dns-domain? (string-append longest-valid-label "a")))
-  (check-false (dns-domain? (string-append longest-valid-domain "a"))))
 
 ;; ~~ Email address validation (subset of RFC5322) ~~~~~~~~~
 
@@ -119,6 +91,10 @@
 
 (define (email-error noun has-problem bad str)
   (raise-arguments-error 'validate-email-address (format "~a ~a" noun has-problem) noun bad "in" str))
+
+;; ASIDE: Here’s a nearly-complete Regex for RFC5322. Not using it because it allows
+;; for things that many/most email services & clients don’t actually support.
+;; #px"^(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\\[\\]-\x7f]|\\\\[\x01-\x09\x0b\x0c\x0e-\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\\])$" str)))
 
 (define (validate-email-address str)
   (unless (string? str) (raise-argument-error 'validate-email "string" str))
@@ -142,27 +118,7 @@
                  str))
   str)
 
-;; Here’s a nearly-complete Regex for RFC5322. Not using it because it allows
-;; for things that many/most email services & clients don’t actually support.
-;; #px"^(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\\[\\]-\x7f]|\\\\[\x01-\x09\x0b\x0c\x0e-\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\\])$" str)))
 
-(module+ test
-  (check-true (email-address? "test@domain.com"))
-  (check-true (email-address? "test-email.with+symbol@domain.com"))
-  (check-true (email-address? "id-with-dash@domain.com"))
-  (check-true (email-address? "_______@example.com"))
-  (check-true (email-address? "#!$%&'*+-/=?^_{}|~@domain.org"))
-  (check-true (email-address? "\"email\"@example.com"))
-
-  ;; See also the tests for dns-domain? which apply to everything after the @
-  (check-false (email-address? "email"))
-  (check-false (email-address? "email@"))
-  (check-false (email-address? "@domain.com"))
-  (check-false (email-address? "@"))
-  (check-false (email-address? ""))
-  (check-false (email-address? (string-append "test@" longest-valid-domain)))
-  (check-false (email-address? "email@123.123.123.123"))
-  (check-false (email-address? "email@[123.123.123.123]")))
 
 ;; ~~ URL Validation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -176,21 +132,7 @@
            (dns-domain? (url-host u))
            #t))))
 
-(module+ test
-  (check-true (valid-url-string? "https://example.com"))
-  (check-true (valid-url-string? "ftp://example.com"))          ; FTP scheme
-  (check-true (valid-url-string? "gonzo://example.com"))        ; scheme need not be registered
-  (check-true (valid-url-string? "https://user:p@example.com")) ; includes user/password
-  (check-true (valid-url-string? "https://example.com:8080"))   ; includes port
-  (check-true (valid-url-string? "file://C:\\home\\user?q=me"))   ; OK whatever
 
-  ;; Things that are valid URIs but not valid URLs
-  (check-false (valid-url-string? "news:comp.servers.unix")) ; no host given, only path
-  (check-false (valid-url-string? "http://ex ample.com"))  ; domain not RFC 1035 compliant
-
-  ;; Things that are actually valid URLs but I say nuh-uh, not for using in feeds
-  (check-false (valid-url-string? "ldap://[2001:db8::7]/c=GB?objectClass?one"))
-  (check-false (valid-url-string? "telnet://192.0.2.16:80/")))
 
 ;; ~~ Tag URIs (RFC 4151) ~~~~~~~~~~~~~~~~~~~~~~~~
 ;;
@@ -229,17 +171,10 @@
   (and (string? val)
        (regexp-match? #rx"^[a-zA-Z0-9_.~,;=$&'@\\!\\(\\)\\*\\+\\:\\?\\/\\-]*$" val)))
 
-(module+ test
-  (check-true (tag-specific-string? "abcdefghijklmnopqrstuvwxyz0123456789"))
-  (check-true (tag-specific-string? "ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
-  (check-true (tag-specific-string? "_.~,;=$&'@"))
-  (check-true (tag-specific-string? "!()*+:/-")))
-
 (define-explained-contract (tag-entity-date? val)
   "an RFC 4151 date string in the format YYYY[-MM[-DD]]"
   (and (string? val)
        (regexp-match? #px"^[0-9]{4}(-(0[1-9]|1[012])(-(0[1-9]|[12][0-9]|3[01]))?)?$" val)))
-
 
 (struct tag-uri (authority date specific)
   #:methods gen:custom-write
@@ -261,7 +196,6 @@
 (define (tag-uri->string t #:specific [specific (tag-uri-specific t)])
   (string-append "tag:" (tag-uri-authority t) "," (tag-uri-date t) ":" specific))
 
-
 ;; RFC 4151 section 2.4 — Equality of tags:
 ;; “Tags are simply strings of characters and are considered equal if and
 ;;  only if they are completely indistinguishable in their machine
@@ -274,15 +208,7 @@
 (define (tag=? t1 t2)
   (apply equal? (map tag-uri->string (list t1 t2))))
 
-(module+ test
-  (check-true (tag=? (mint-tag-uri "example.com" "2005" "main")
-                     (mint-tag-uri "example.com" "2005" "main")))
-  ;; Comparison is case-sensitive?
-  (check-false (tag=? (mint-tag-uri "Example.com" "2005" "main")
-                      (mint-tag-uri "example.com" "2005" "main")))
-  ;; Date equivalency doesn’t count
-  (check-false (tag=? (mint-tag-uri "Example.com" "2005-01" "main")
-                      (mint-tag-uri "Example.com" "2005-01-01" "main"))))
+
 
 ;; ~~ Dates ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -298,21 +224,19 @@
      (moment (n: y) (n: m) (n: d) (n: hr) (n: min) (n: sec) 0)]
     [_ (raise-argument-error 'Date "string in the format ‘YYYY-MM-DD [hh:mm[:ss]]’" str)]))
 
-(module+ test
-  (check-true (moment<=? (now/moment) (infer-moment)))
-  (check-equal? (infer-moment "2022-04-08")
-                (moment 2022 4 8))
-  (check-exn exn:fail:contract? (lambda () (infer-moment "2022"))))
-
 (define (moment->string m type)
   (~t m (case type
           [(atom) "y-MM-dd'T'HH:mm:ssXXXXX"]
           [(rss) "E, d MMM y HH:mm:ss xx"])))
 
+
+
 ;; ~~ Flavors of RSS: 'rss or 'atom ~~~~~~~~~~~~~~
+
 (define-explained-contract (rss-dialect? v)
   "A symbol representing a valid RSS dialect: 'rss or 'atom"
   (or (eq? v 'rss) (eq? v 'atom)))
+
 
 
 ;; ~~ Persons ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -334,16 +258,7 @@
                ,@(if/sp uri `(,uri-tag ,uri)))]
     [(rss)
      `(,entity ,(format "~a (~a)" email name))]))
-  
-(module+ test
-  (define joel (make-person "Joel" "joel@example.com"))
-  (check-true (person? joel))
-  (check-equal? (person->xexpr joel 'author 'rss) '(author "joel@example.com (Joel)"))
-  (check-equal? (person->xexpr joel 'author 'atom) '(author (name "Joel") (email "joel@example.com")))
 
-  ;; Prefixing child elements
-  (check-equal? (person->xexpr joel 'itunes:owner 'itunes)
-                '(itunes:owner (itunes:name "Joel") (itunes:email "joel@example.com"))))
 
 
 ;; ~~ MIME types ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -363,18 +278,7 @@
                #f)]
     [_ #f]))
 
-(module+ test
-  ;; Check some common types
-  (check-equal? (path/string->mime-type ".mp3") "audio/mpeg")
-  (check-equal? (path/string->mime-type ".m4a") "audio/mp4")
-  (check-equal? (path/string->mime-type ".mpg") "video/mpeg")
-  (check-equal? (path/string->mime-type ".mp4") "video/mp4")
 
-  ;; Can use paths
-  (check-equal? (path/string->mime-type (build-path "." "file.epub")) "application/epub+zip")
-
-  ;; Empty list returned for unknown extensions
-  (check-equal? (path/string->mime-type ".asdahsf") #f))
 
 ;; ~~ Enclosures ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -400,39 +304,6 @@
        [(xml) (xexpr->xml encl-xpr)]
        [(xml-string) (indented-xml-string encl-xpr)]))])
 
-(module+ test
-  (require racket/file)
-  (define test-enc
-    (enclosure "gopher://example.com/greeting.m4a" "audio/mp4" 1234))
-
-  (check-equal?
-   (express-xml test-enc 'atom #:as 'xexpr)
-   '(link [[rel "enclosure"]
-           [href "gopher://example.com/greeting.m4a"]
-           [length "1234"]
-           [type "audio/mp4"]]))
-  
-  (check-equal?
-   (express-xml test-enc 'rss #:as 'xexpr)
-   '(enclosure [[url "gopher://example.com/greeting.m4a"]
-                [length "1234"]
-                [type "audio/mp4"]]))
-
-  ;; Enclosure with unknown type
-  (define test-enc2
-    (enclosure "gopher://example.com/greeting.m4a" #f 1234))
-  
-  (check-equal?
-   (express-xml test-enc2 'atom #:as 'xexpr)
-   '(link [[rel "enclosure"]
-           [href "gopher://example.com/greeting.m4a"]
-           [length "1234"]]))
-  
-  (check-equal?
-   (express-xml test-enc2 'rss  #:as 'xexpr)
-   '(enclosure [[url "gopher://example.com/greeting.m4a"]
-                [length "1234"]])))
-
 ;; Convenient way to make an enclosure if you have an existing file
 (define/contract (file->enclosure file-path base-url)
   (-> path-string? valid-url-string? enclosure?)
@@ -443,17 +314,6 @@
              (path/string->mime-type filename)
              (file-size file-path)))
 
-(module+ test
-  (require racket/file racket/runtime-path)
-  (define-runtime-path temp "temp.mp3")
-  (display-to-file (make-bytes 100 65) temp #:exists 'truncate)
-  (check-equal?
-   (express-xml (file->enclosure temp "http://example.com") 'atom #:as 'xexpr)
-   '(link [[rel "enclosure"]
-           [href "http://example.com/temp.mp3"]
-           [length "100"]
-           [type "audio/mpeg"]]))
-  (delete-file temp))
 
 
 ;; ~~ ISO 639 Language codes ~~~~~~~~~~~~~~~~~~~~~

@@ -13,9 +13,6 @@
 
 (provide (all-defined-out))
 
-(module+ test
-  (require rackunit))
-
 (define-syntax (define-explained-contract stx)
   (syntax-case stx ()
     [(_ (NAME VAL) EXPECTED TEST-EXPR)
@@ -47,16 +44,7 @@
     [(list* tag (list (list (? symbol?) (? string?)) ...) elements) elements]
     [(list* tag elements) elements]))
 
-(module+ test
-  (check-equal? (get-attrs '(br)) '())
-  (check-equal? (get-attrs '(div "hello")) '())
-  (check-equal? (get-attrs '(div amp "hello")) '())
-  (check-equal? (get-attrs '(div [[id "main"]] amp "hello")) '((id "main")))
 
-  (check-equal? (get-elements '(br)) '())
-  (check-equal? (get-elements '(div amp "hello")) '(amp "hello"))
-  (check-equal? (get-elements '(div [[id "main"]])) '())
-  (check-equal? (get-elements '(div [[id "main"]] amp "hello")) '(amp "hello")))
 
 ;; ~~ XML Utility functions ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -68,17 +56,6 @@
            (regexp-replace* #rx"&amp;|&lt;|&gt;" (xexpr->string v) (lambda (e) (hash-ref entities e)))]
           [else v]))
   (cdata 'racket 'racket (format "<![CDATA[~a]]>" (string-replace cdata-str "]]>" "]]&gt;"))))
-
-(module+ test
-  ;; String input: no escaping in result
-  (check-equal? (as-cdata "Hi & < >")
-                (cdata 'racket 'racket "<![CDATA[Hi & < >]]>"))
-  ;; Txexpr input: no escaping in result
-  (check-equal? (as-cdata '(div (p "Hi & < >")))
-                (cdata 'racket 'racket "<![CDATA[<div><p>Hi & < ></p></div>]]>"))
-  ;; …but DO escape the forbidden string "]]>" which would prematurely end the block
-  (check-equal? (as-cdata '(div (p "Hi ]]> whoops how did that get there")))
-                (cdata 'racket 'racket "<![CDATA[<div><p>Hi ]]&gt; whoops how did that get there</p></div>]]>")))
 
 ;; Optional path to XSLT stylesheet
 (define feed-xslt-stylesheet (make-parameter #f))
@@ -141,26 +118,6 @@
                   [(list cpoint1 cpoint2)
                    (cons cpoint1 (cons cpoint2 new-acc))]
                   [_ (cons (substring str pos gap-start) new-acc)]))]))]))
-(module+ test
-  (require rackunit)
-  ;; The XML 5 get replaced with symbolic equivalents
-  ;; First/last entities and adjacent entities get replaced properly
-  (check-equal? (numberize-named-entities "&amp;&quot;&apos;&lt;&gt;")
-                '(amp quot apos lt gt))
-  ;; Others get replaced with numeric entities
-  (check-equal? (numberize-named-entities "Copyright&copy; Trademark&trade; Recording copyright&copysr;")
-                '("Copyright" 169 " Trademark" #x2122 " Recording copyright" #x2117))
-  
-  ;; Entities with multiple codepoints get both inserted
-  (check-equal? (numberize-named-entities "This is one with multiple codepoints: &sqcaps;")
-                '("This is one with multiple codepoints: " 8851 65024))
-  ;; Non-existent entities get left in
-  (check-equal? (numberize-named-entities "Total &madeup; mistake")
-                '("Total " "&madeup;" " mistake"))
-  ;; Avoid pointless copies
-  (let ([already-sanitary-string "abcdefg"])
-    (check-eq? (car (numberize-named-entities already-sanitary-string))
-               already-sanitary-string)))
 
 ;; Converts a tagged X-expression into an XML string, with any non-XML entities in string elements
 ;; replaced with numeric equivalents. This string can in turn be used as the content of another
@@ -180,12 +137,6 @@
                        (get-elements x)))]
        [else x]))))
 
-(module+ test
-  (define judy-str "Punch &amp; Judy&apos;s friend George&trade;")
-
-  (check-equal? (txexpr->safe-content-str `(div (p ,judy-str)))
-                "<div><p>Punch &amp; Judy&apos;s friend George&#8482;</p></div>"))
-
 (define (content->safe-element content element dialect preserve-cdata-struct?)
   `(,element
     ,@(if/sp (and (txexpr? content) (eq? dialect 'atom)) `[[type "html"]])
@@ -193,20 +144,6 @@
        [(string? content)
         (let ([result (as-cdata content)]) (if preserve-cdata-struct? result (cdata-string result)))]
        [else (txexpr->safe-content-str content)])))
-
-(module+ test
-  (define content2 "<div>Hi ]]> whoops how did that get there</div>")
-  ;; Includes type=text attribute for Atom
-  (check-equal? (content->safe-element `(div (p "My trademark&trade;")) 'content 'atom #f)
-                '(content ((type "html")) "<div><p>My trademark&#8482;</p></div>"))
-  ;; Omit type attribute for RSS
-  (check-equal? (content->safe-element `(div (p "My trademark&trade;")) 'description 'rss #f)
-                '(description "<div><p>My trademark&#8482;</p></div>"))
-  ;; String content encoded as CDATA
-  (check-equal? (content->safe-element "<div>mischief managed: ]]></div>" 'content 'atom #f)
-                '(content "<![CDATA[<div>mischief managed: ]]&gt;</div>]]>"))
-  ;; preserve-cdata-struct? #t
-  (check-true (cdata? (cadr (content->safe-element "x" 'content 'atom #t)))))
 
 
 ;; ~~ XML Display ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -221,24 +158,7 @@
           (display-proc (if doc? (xml-document xpr) (xexpr->xml xpr)) #:indentation 'peek)))))
   (string-trim xml-str #:right? #f))
 
-(module+ test
-  (define test-xpr
-    `(feed (author (name "Punch & Judy"))
-           (title [[type "text"]] "Punch & Judy's <friend> \"George\" Escapes!&trade;")
-           (subtitle "Here & < > are escaped, but ' \" © ℗ ™ are not")
-           (content [[type "html"]] ,(txexpr->safe-content-str `(div ,judy-str)))))
-  (define expect-str #<<XML
-<feed>
-  <author>
-    <name>Punch &amp; Judy</name>
-  </author>
-  <title type="text">Punch &amp; Judy's &lt;friend&gt; "George" Escapes!&amp;trade;</title>
-  <subtitle>Here &amp; &lt; &gt; are escaped, but ' " © ℗ ™ are not</subtitle>
-  <content type="html">&lt;div&gt;Punch &amp;amp; Judy&amp;apos;s friend George&amp;#8482;&lt;/div&gt;</content>
-</feed>
-XML
-    )
-  (check-equal? (indented-xml-string test-xpr) expect-str))
+
 
 ;; ~~ Other stuff ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
