@@ -35,6 +35,10 @@ repo}.
 
 Or using DrRacket: click the @onscreen{File} menu → @onscreen{Install Package …}.
 
+If deploying Splitflap in a production environment, you will probably want to use @tt{splitflap-lib}
+instead of @tt{splitflap}. This will avoid fetching/building this documentation, and will greatly
+reduce the number of dependencies installed.
+
 @local-table-of-contents[]
 
 @include-section["tutorial.scrbl"]
