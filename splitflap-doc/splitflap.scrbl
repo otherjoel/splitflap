@@ -28,7 +28,8 @@ an exception.
 Please report any problems on @hyperlink["https://github.com/otherjoel/splitflap/issues"]{the Github
 repo}.
 
-@bold{Installation:} To install this package from the command line:
+@bold{Installation:} Splitflap requires Racket 8.1 or higher. To install this package from the
+command line:
 
 @terminal{
  @:>{raco pkg install splitflap}}

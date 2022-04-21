@@ -1,4 +1,7 @@
-# `splitflap` [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg)](CODE_OF_CONDUCT.md)
+# `splitflap` 
+
+[![CI](https://github.com/otherjoel/splitflap/actions/workflows/push.yml/badge.svg)](https://github.com/otherjoel/splitflap/actions)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.0-4baaaa.svg)](CODE_OF_CONDUCT.md)
 
 🔖⚛️ RSS / Atom feed generation library for Racket.
 
@@ -6,7 +9,7 @@ Everything you supply is validated, so the result is always either a valid feed 
 
 **Documentation is at <https://docs.racket-lang.org/splitflap/index.html>**
 
-To install Splitflap from the command line:
+Splitflap requires Racket 8.1 or higher. To install Splitflap from the command line:
 
     > raco pkg install splitflap
 
