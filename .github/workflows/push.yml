@@ -16,7 +16,7 @@ jobs:
       - name: Checkout splitflap repo
         uses: actions/checkout@master
       - name: Install Racket ${{ matrix.racket-version }} ${{ matrix.racket-variant }}
-        uses: Bogdanp/setup-racket@v1.7
+        uses: Bogdanp/setup-racket@v1.9
         with:
           architecture: 'x64'
           distribution: 'full'
