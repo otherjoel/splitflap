@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         racket-variant: ['BC', 'CS']
-        racket-version: ['8.1', '8.2', '8.3', '8.4', '8.5']
+        racket-version: ['8.1', '8.2', '8.3', '8.4', '8.5', '8.6']
     name: Test on Racket ${{ matrix.racket-version }} ${{ matrix.racket-variant }}
     steps:
       - name: Checkout splitflap repo
