@@ -7,7 +7,7 @@
 
 Everything you supply is validated, so the result is always either a valid feed or an exception.
 
-**Documentation is at <https://docs.racket-lang.org/splitflap/index.html>**
+**Documentation is at <https://joeldueck.com/what-about/splitflap>**
 
 Splitflap requires Racket 8.1 or higher. To install Splitflap from the command line:
 
