@@ -167,7 +167,7 @@
 
 ;; Validates the portion labeled “specific” in the RFC 4151 grammar
 (define-explained-contract (tag-specific-string? val)
-  "a string containing only a–z, A–Z, 0–9 or chars in the set -._~!$&'()*+,;=:@/?"
+  "a string containing only a–z, A–Z, 0–9 or chars in the set -._~~!$&'()*+,;=:@/?"
   (and (string? val)
        (regexp-match? #rx"^[a-zA-Z0-9_.~,;=$&'@\\!\\(\\)\\*\\+\\:\\?\\/\\-]*$" val)))
 
