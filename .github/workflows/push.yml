@@ -12,13 +12,13 @@ jobs:
     strategy:
       matrix:
         racket-variant: ['BC', 'CS']
-        racket-version: ['8.1', '8.2', '8.3', '8.4', '8.5', '8.6', '8.7']
+        racket-version: ['8.1', '8.2', '8.3', '8.4', '8.5', '8.6', '8.7', '8.8', '8.9']
     name: Test on Racket ${{ matrix.racket-version }} ${{ matrix.racket-variant }}
     steps:
       - name: Checkout splitflap repo
         uses: actions/checkout@master
       - name: Install Racket ${{ matrix.racket-version }} ${{ matrix.racket-variant }}
-        uses: Bogdanp/setup-racket@v1.9
+        uses: Bogdanp/setup-racket@v1.10
         with:
           architecture: 'x64'
           distribution: 'full'
