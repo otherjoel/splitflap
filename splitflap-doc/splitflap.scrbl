@@ -1,8 +1,6 @@
 #lang scribble/manual
 
-@(require "misc.rkt"
-          scribble/core
-          scribble/html-properties)
+@(require "misc.rkt")
 
 @title[#:style 'toc]{Splitflap: Atom and RSS Feeds}
 @author[(author+email "Joel Dueck" "joel@jdueck.net")]
