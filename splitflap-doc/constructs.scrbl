@@ -19,7 +19,7 @@
 @(define mod-constructs (make-base-eval #:lang 'racket/base))
 @(mod-constructs '(require splitflap gregor racket/file racket/promise))
 
-@defmodule[splitflap/constructs]
+@defmodule[splitflap/constructs #:use-sources (splitflap/private/validation splitflap)]
 
 The format of feeds is specified by the @Atom1.0[] and @RSS2.0[] specifications (and, for all
 practical purposes, by @AppleRequirements[] in the case of podcasts). These in turn reference other

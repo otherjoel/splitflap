@@ -8,7 +8,7 @@
 @flipboard-div
 @flipboard-script
 
-@defmodule[splitflap]
+@defmodule[splitflap #:use-sources (splitflap/private/feed)]
 
 This library provides a simple interface for building valid Atom and RSS feeds, including podcast
 feeds, for your web properties.
