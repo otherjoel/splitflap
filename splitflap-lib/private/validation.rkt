@@ -170,7 +170,7 @@
 (define-explained-contract (tag-specific-string? val)
   "a string containing only a–z, A–Z, 0–9 or chars in the set -._~~!$&'()*+,;=:@/?"
   (and (string? val)
-       (regexp-match? #rx"^[a-zA-Z0-9_.~,;=$&'@\\!\\(\\)\\*\\+\\:\\?\\/\\-]*$" val)))
+       (regexp-match? #px"^[a-zA-Z0-9_.~,;=$&'@\\!\\(\\)\\*\\+\\:\\?\\/\\-]*$" val)))
 
 (define-explained-contract (tag-entity-date? val)
   "an RFC 4151 date string in the format YYYY[-MM[-DD]]"

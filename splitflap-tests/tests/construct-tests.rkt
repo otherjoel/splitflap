@@ -80,6 +80,15 @@
 (check-true (tag-specific-string? "ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
 (check-true (tag-specific-string? "_.~,;=$&'@"))
 (check-true (tag-specific-string? "!()*+:/-"))
+(check-true (tag-specific-string? ""))
+(check-false (tag-specific-string? "a\\"))
+(check-false (tag-specific-string? "a "))
+(check-false (tag-specific-string? "aå"))
+(check-false (tag-specific-string? "a^"))
+
+(define invalid-specific " tra^^shy\\` GarB§ºage ###")
+(check-false (tag-specific-string? invalid-specific))
+(check-true (tag-specific-string? (normalize-tag-specific invalid-specific)))
 
 ;; RFC 4151 section 2.4 — Equality of tags:
 ;; “Tags are simply strings of characters and are considered equal if and
