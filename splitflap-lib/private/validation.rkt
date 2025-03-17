@@ -22,6 +22,7 @@
          append-specific
          tag-uri->string
          tag=?
+         normalize-tag-specific
          infer-moment
          moment->string
          (rename-out [make-person person])
@@ -209,6 +210,10 @@
 (define (tag=? t1 t2)
   (apply equal? (map tag-uri->string (list t1 t2))))
 
+(define (normalize-tag-specific str)
+  (string-normalize-spaces str
+                           #px"[^a-zA-Z0-9_.~,;=$&'@\\!\\(\\)\\*\\+\\:\\?\\/\\-]+"
+                           "-"))
 
 
 ;; ~~ Dates ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

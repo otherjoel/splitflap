@@ -21,7 +21,8 @@
           [mint-tag-uri (-> (or/c dns-domain? email-address?) tag-entity-date? tag-specific-string? tag-uri?)]
           [append-specific (-> tag-uri? tag-specific-string? tag-uri?)]
           [tag-uri->string (->* (tag-uri?) (#:specific tag-specific-string?) string?)]
-          [tag=? (-> tag-uri? tag-uri? boolean?)])
+          [tag=? (-> tag-uri? tag-uri? boolean?)]
+          [normalize-tag-specific (-> string? tag-specific-string?)])
 
          ; RSS Dialects
          rss-dialect?

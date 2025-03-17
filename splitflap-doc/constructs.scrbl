@@ -134,6 +134,23 @@ Returns @racket[#t] if @racket[_str] is an acceptable string for the “specific
 
 }
 
+@defproc[(normalize-tag-specific [str string?]) tag-specific-string?]{
+
+Replaces any characters that would disqualify @racket[_str] from being a valid
+@racket[tag-specific-string?] with hyphens. Useful when you want to set the “specific” portion of a
+@tech{tag URI} programmatically.
+
+@examples[#:eval mod-constructs
+          (tag-specific-string? "my blog")
+          (normalize-tag-specific "my-blog")
+          (tag-specific-string? (normalize-tag-specific "my-blog"))
+
+          (tag-specific-string? " tra^^shy\\` GarB§ºage ###")
+          (normalize-tag-specific " tra^^shy\\` GarB§ºage ###")
+          (tag-specific-string? (normalize-tag-specific " tra^^shy\\` GarB§ºage ###"))]
+
+}
+
 @defproc[(tag-uri? [v any/c]) boolean?]{
 
 Returns @racket[#t] when @racket[_v] is a @racketlink[mint-tag-uri]{@tt{tag-uri}} struct.
