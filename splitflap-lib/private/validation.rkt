@@ -323,7 +323,7 @@
   (unless (eq? 'file (file-or-directory-type file-path))
     (raise-argument-error 'file->enclosure "path to an existing file" file-path))
   (define filename (file-name-from-path file-path))
-  (enclosure (url->string (combine-url/relative (string->url base-url) (path->string filename)))
+  (enclosure (url-join base-url (path->string filename))
              (path/string->mime-type filename)
              (file-size file-path)))
 
