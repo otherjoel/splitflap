@@ -371,6 +371,32 @@ address).
 
 }
 
+@defproc[(url-domain [u valid-url-string?]) dns-domain?]{
+
+Returns only the domain (or “host”) portion of @racket[_u].
+
+@examples[#:eval mod-constructs
+          (url-domain "http://example.com")
+          (url-domain "https://user:p@example.com:8080/path/to/file")]
+
+}
+
+@defproc[(url-join [base valid-url-string?] [rel relative-path?]) valid-url-string?]{
+
+Combines @racket[_base] with @racket[_rel] to form a new URL, ensuring the result is correctly
+encoded. On Windows machines, backslashes are converted to forward slashes.
+
+This is a convenient front-end to Racket’s @racket[combine-url/relative] and
+@racket[relative-path->relative-url-string].
+
+@examples[#:eval mod-constructs
+          (url-join "http://example.com" "path/to/my file.html")
+          (url-join "http://example.com/" "path/to/resource")
+          (eval:error (url-join "http://example.com" "/absolute/path"))]
+
+}
+
+
 @defproc[(email-address? [v any/c]) boolean?]{
 
 Returns @racket[#t] if @racket[_v] is a valid email address according to what is essentially a

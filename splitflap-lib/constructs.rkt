@@ -12,6 +12,10 @@
          valid-url-string?
          email-address?
          validate-email-address
+
+         (contract-out
+          [url-domain (-> valid-url-string? dns-domain?)]
+          [url-join (-> valid-url-string? relative-path? valid-url-string?)])
          
          ; Tag URIs:
          tag-entity-date?

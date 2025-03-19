@@ -34,11 +34,11 @@
          mime-types-by-ext
          path/string->mime-type
          valid-url-string?
+         url-domain
+         url-join
          iso-639-language-code?
          language-codes
          system-language)
-
-
 
 ;; ~~ DNS Domain validation (RFC 1035) ~~~~~~~~~~~
 ;;
@@ -134,7 +134,14 @@
            (dns-domain? (url-host u))
            #t))))
 
+;; Convenience: "https://www.example.com/path" → "www.example.com"
+(define (url-domain url-str)
+  (url-host (string->url url-str)))
 
+;; Convenience: ("http://example.com" "path/to/my file") → "http://example.com/path/to/my%20file"
+(define (url-join url-str rp)
+  (define rel-path (relative-path->relative-url-string rp))
+  (url->string (combine-url/relative (string->url url-str) rel-path)))
 
 ;; ~~ Tag URIs (RFC 4151) ~~~~~~~~~~~~~~~~~~~~~~~~
 ;;
@@ -221,7 +228,7 @@
 (define (n: v) (cond [(not v) 0] [(string? v) (string->number v)] [else v]))
 
 (define date/time-regex
-    #px"^([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])(?:\\s+([01]?[0-9]|2[0-3]):([0-5][0-9])(?::([0-5][0-9]|60))?)?")
+  #px"^([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])(?:\\s+([01]?[0-9]|2[0-3]):([0-5][0-9])(?::([0-5][0-9]|60))?)?")
 
 (define (infer-moment [str ""])
   (match str
