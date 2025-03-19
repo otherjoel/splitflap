@@ -42,10 +42,10 @@ stable even if the resource’s URL changes.
 
 A @deftech{tag URI} is an identifier of the form
 @racketvalfont{@litchar{tag:}@nonterm{authority}@litchar{,}@nonterm{date}@litchar{:}@nonterm{specific}}.
-The @nonterm{authority} is a domain name (or email address) held by you as of @nonterm{date};
-together, the authority and the date form a unique @italic{tagging entity}, which acts kind of like
-a namespace. The @nonterm{specific} is a string uniquely identifying a particular resource within
-the tagging entity.
+The @nonterm{@deftech{authority}} is a domain name (or email address) held by you as of
+@nonterm{date}; together, the authority and the date form a unique @italic{tagging entity}, which
+acts kind of like a namespace. The @nonterm{@deftech{specific}} is a string uniquely identifying a
+particular resource (e.g., a page or file) within the tagging entity.
 
 The tag URI scheme is formalized in @hyperlink["https://datatracker.ietf.org/doc/html/rfc4151"]{RFC
 4151}.
@@ -83,7 +83,7 @@ Converts a @racketlink[mint-tag-uri]{@tt{tag-uri}} into a string.
 
 @defproc[(append-specific [tag tag-uri?] [suffix tag-specific-string?]) tag-uri?]{
 
-Returns a copy of @racket[_tag] with @racket[_suffix] appended to the “specific” (last) portion of
+Returns a copy of @racket[_tag] with @racket[_suffix] appended to the @tech{specific} segment of
 the tag URI.  This allows you to append to a feed’s @tech{tag URI} to create unique identifiers for
 the items within that feed.
 
@@ -122,7 +122,7 @@ acceptable date format for a @tech{tag URI} according to RFC 4151.
 
 @defproc[(tag-specific-string? [str string?]) boolean?]{
 
-Returns @racket[#t] if @racket[_str] is an acceptable string for the “specific” portion of a
+Returns @racket[#t] if @racket[_str] is an acceptable string for the @tech{specific} portion of a
 @tech{tag URI} as specified in RFC 4151: a string comprised only of the characters in the range
 @litchar{a–z}, @litchar{A–Z}, @litchar{0–9} or in the set @litchar{-._~!$&'()*+,;=:@"@"/?}.
 
@@ -137,8 +137,8 @@ Returns @racket[#t] if @racket[_str] is an acceptable string for the “specific
 @defproc[(normalize-tag-specific [str string?]) tag-specific-string?]{
 
 Replaces any characters that would disqualify @racket[_str] from being a valid
-@racket[tag-specific-string?] with hyphens. Useful when you want to set the “specific” portion of a
-@tech{tag URI} programmatically.
+@racket[tag-specific-string?] with hyphens. Useful when you want to set the @tech{specific} portion
+of a @tech{tag URI} programmatically.
 
 @examples[#:eval mod-constructs
           (tag-specific-string? "my blog")
@@ -264,14 +264,15 @@ This struct qualifies as @racketlink[food?]{food}, so it can be converted to XML
 @defproc[(file->enclosure [file path-string?] [base-url valid-url-string?]) enclosure?]{
 
 Returns an @racket[enclosure] for @racket[_file], with a MIME type matching the file’s extension (if
-it can be determined), the URL set to @racket[_file] appended onto @racket[_base-url], and the
-length set to the file’s actual length in bytes.
+it can be determined). The enclosure’s URL is set to the @racket[_base-url] plus the filename
+portion of @racket[_file], and the length is set to the file’s actual length in bytes.
 
 This procedure accesses the filesystem; if @racket[_file] does not exist, an exception is raised.
 
 @examples[#:eval mod-constructs
           (code:comment @#,elem{Make a temporary file})
           (define audio-file (make-temporary-file "audio-~a.m4a"))
+          audio-file
           (display-to-file (make-bytes 100 66) audio-file #:exists 'truncate)
           (code:comment @#,elem{Pass the temp file to an enclosure})
           (display
@@ -374,6 +375,9 @@ address).
 @defproc[(url-domain [u valid-url-string?]) dns-domain?]{
 
 Returns only the domain (or “host”) portion of @racket[_u].
+
+This function is convenient for @racket[mint-tag-uri] (which needs a valid @racket[dns-domain?])
+when you already have a base URL for the site.
 
 @examples[#:eval mod-constructs
           (url-domain "http://example.com")
