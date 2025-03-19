@@ -6,8 +6,7 @@
          racket/file
          racket/runtime-path
          rackunit
-         splitflap/private/validation
-         splitflap/private/feed)
+         splitflap)
 
 ;; ~~ DNS Domain validation (RFC 1035) ~~~~~~~~~~~
 
@@ -74,6 +73,29 @@
 ;; Things that are actually valid URLs but I say nuh-uh, not for using in feeds
 (check-false (valid-url-string? "ldap://[2001:db8::7]/c=GB?objectClass?one"))
 (check-false (valid-url-string? "telnet://192.0.2.16:80/"))
+
+;; ~~ URL convenience functions ~~~~~~~~~~~~~~~~~~
+
+(check-equal? (url-domain "http://example.com") "example.com")
+(check-equal? (url-domain "https://user:p@example.com:8080/path/to/file") "example.com")
+(check-exn exn:fail:contract? (lambda () (url-domain "x")))
+
+;; ensure paths are tested accurately on all platforms
+(define rel-path (build-path "path" "to" "my file.html"))
+(check-true (relative-path? rel-path))
+(define abs-path (path->complete-path rel-path))
+(check-true (absolute-path? abs-path))
+
+(check-equal? (url-join "http://example.com" rel-path)            ; bare domain w/o trailing slash
+              "http://example.com/path/to/my%20file.html")
+(check-equal? (url-join "http://example.com/" rel-path)           ; bare domain w/trailing slash
+              "http://example.com/path/to/my%20file.html")
+(check-equal? (url-join "http://example.com/dir/final" rel-path)  ; final elem w/o trailing slash removed
+              "http://example.com/dir/path/to/my%20file.html")     
+(check-equal? (url-join "http://example.com/my dir/" rel-path) ; final element w/trailing slash kept
+              "http://example.com/my%20dir/path/to/my%20file.html")
+(check-exn exn:fail:contract? (lambda () (url-join "x" "x"))) ; invalid URL string
+(check-exn exn:fail:contract? (lambda () (url-join "http://example.com" abs-path))) ; no absolute paths
 
 ;; ~~ Tag URIs (RFC 4151) ~~~~~~~~~~~~~~~~~~~~~~~~
 (check-true (tag-specific-string? "abcdefghijklmnopqrstuvwxyz0123456789"))
