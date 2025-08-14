@@ -21,8 +21,8 @@
 (define (W3CFeedValidator . x)
   (apply hyperlink "https://validator.w3.org/feed/" (if (null? x) '("W3C Feed Validator") x)))
 
-(define-runtime-path aux-css "styles/terminal.css")
-(define-runtime-path aux-tex "styles/terminal.tex")
+(define-runtime-path aux-css "styles/my.css")
+(define-runtime-path aux-tex "styles/my.tex")
 (define-runtime-path flappy-css "styles/flappy.css")
 (define-runtime-path flappy-tex "styles/flappy.tex")
 
