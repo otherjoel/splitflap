@@ -10,8 +10,8 @@ Splitflap can be considered stable. No backward-incompatible changes are planned
 
 @section{Known Issues}
 
-See Splitflap’s @hyperlink["https://github.com/otherjoel/splitflap/issues"]{issues tracker on Github} for any
-known problems with the library, or to report problems.
+See Splitflap’s @hyperlink["https://github.com/otherjoel/splitflap/issues"]{issues tracker on Github}
+for any known problems with the library, or to report problems.
 
 @subsection{Non-ASCII email addresses and domains}
 

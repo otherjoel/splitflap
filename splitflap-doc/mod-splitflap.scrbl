@@ -23,14 +23,15 @@
 Use @racket[feed-item] and @racket[feed] to create feeds for web content like blog posts, comments,
 or even notifications: any content with a timestamp and its own URL.
 
-You have a choice of using RSS or Atom formats, or both. Twenty years ago, holy wars were fought
-over which format was superior and it was necessary to supply both in order to assure compatibility
-with the most clients. These days almost every client supports both, so you probably only need to
+You have a choice of using RSS or Atom formats, or both. Decades ago, holy wars were fought over
+which format was superior, and it was safest to supply both in order to assure compatibility with
+the most clients. These days almost every client supports both formats, so you probably only need to
 supply one.
 
-You should run all your feeds through the @W3CFeedValidator[]. Please
-@hyperlink["https://github.com/otherjoel/splitflap/issues"]{file an issue} should you
-encounter any validation errors in feeds created with Splitflap.
+You should run all your feeds through the @W3CFeedValidator[]. Again, the design intent of this
+package is that it should always throw an exception rather than produce a feed that would not pass
+the validator. Please @hyperlink["https://github.com/otherjoel/splitflap/issues"]{file an issue}
+should you encounter any validation errors in feeds created with Splitflap.
 
 
 @defproc[(feed-item [id tag-uri?]
@@ -224,8 +225,8 @@ artwork requirements} for other requirements.}
 @item{The @racket[#:duration] gives the episode’s duration in seconds, and is @spec{optional but
 recommended}.}
 
-@item{If @racket[_explicit] is an optional override of the mandatory feed-level parental advisory
-flag in @racket[podcast]. If it is @racket[_null] (the default), the episode will not contain any
+@item{@racket[_explicit] is an optional override of the mandatory feed-level parental advisory flag
+in @racket[podcast]. If it is @racket[_null] (the default), the episode will not contain any
 parental advisory information. @spec{If it is @racket[#f], Apple Podcasts will mark the episode as
 “Clean”. If it is any other value, Apple Podcasts will mark the episode as “Explicit”.}}
 
@@ -236,9 +237,10 @@ parental advisory information. @spec{If it is @racket[#f], Apple Podcasts will m
 episode; to @racket['trailer] for short promos and previews; or to @racket['bonus] for extra or
 cross-promotional content.}
 
-@item{The @racket[#:block] flag can be set to @racket[#t] to prevent a particular episode from
-appearing in Apple podcasts. For example you might want to block a specific episode if you know that
-its content would otherwise cause the entire podcast to be removed from Apple Podcasts.}
+@item{The @racket[#:block] flag can be set to anything other than @racket[#f] (the default) to
+prevent a particular episode from appearing in Apple podcasts. For example you might want to block a
+specific episode if you know that its content would otherwise cause the entire podcast to be removed
+from Apple Podcasts.}
 
 ]
 
@@ -300,15 +302,15 @@ first.)}}
 
 ]}
 
-@item{Setting @racket[#:block] to @racket[#t] will prevent the entire podcast from appearing in
-Apple Podcasts.}
+@item{Setting @racket[#:block] to a value other than @racket[#f] will prevent the entire podcast
+from appearing in Apple Podcasts.}
 
-@item{Setting @racket[#:complete?] to @racket[#t] indicates that a podcast is complete and you will
-not post any more episodes in the future.}
+@item{Setting @racket[#:complete?] to a value other than @racket[#f] indicates that a podcast is
+complete and you will not post any more episodes in the future.}
 
-@item{If you change the URL where your feed is located, then (in the feed located at the original
-URL) set @racket[#:new-feed-url] to the new feed’s URL. Apple Podcasts (and possibly other clients)
-will automatically update subscriptions to use the new feed. See
+@item{If you change the URL where your feed is located, then (when generating the feed located at
+the original URL) set @racket[#:new-feed-url] to the new feed’s URL. Apple Podcasts (and possibly
+other clients) will automatically update subscriptions to use the new feed. See
 @hyperlink["https://podcasters.apple.com/support/837-change-the-rss-feed-url"]{Apple’s guidelines
 for moving your RSS feed}.}
 
@@ -342,6 +344,6 @@ Returns @racket[#t] if @racket[_v] is a @racket[podcast] struct, @racket[#f] oth
 
 @defproc[(food? [v any/c]) boolean?]{
 
-Returns @racket[#t] when @racket[_v] is one of the struct types that implements the generic
-@racket[express-xml] function: @racket[enclosure], @racket[feed-item], @racket[feed],
+Returns @racket[#t] when @racket[_v] is one of the struct types that implements support for the
+generic @racket[express-xml] function: @racket[enclosure], @racket[feed-item], @racket[feed],
 @racket[episode], or @racket[podcast]; @racket[#f] otherwise}

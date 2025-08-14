@@ -12,6 +12,7 @@
                      racket/promise
                      racket/string
                      splitflap
+                     splitflap/constructs
                      txexpr))
 
 @title[#:tag "mod-constructs"]{Feed Constructs}
@@ -19,7 +20,7 @@
 @(define mod-constructs (make-base-eval #:lang 'racket/base))
 @(mod-constructs '(require splitflap gregor racket/file racket/promise))
 
-@defmodule[splitflap/constructs #:use-sources (splitflap/private/validation splitflap)]
+@defmodule[splitflap/constructs]
 
 The format of feeds is specified by the @Atom1.0[] and @RSS2.0[] specifications (and, for all
 practical purposes, by @AppleRequirements[] in the case of podcasts). These in turn reference other
