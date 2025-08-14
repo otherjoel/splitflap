@@ -11,18 +11,16 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        racket-variant: ['BC', 'CS']
         racket-version: ['stable', 'current']
-    name: Test on Racket ${{ matrix.racket-version }} ${{ matrix.racket-variant }}
+    name: Test on Racket ${{ matrix.racket-version }}
     steps:
       - name: Checkout splitflap repo
         uses: actions/checkout@master
-      - name: Install Racket ${{ matrix.racket-version }} ${{ matrix.racket-variant }}
+      - name: Install Racket ${{ matrix.racket-version }}
         uses: Bogdanp/setup-racket@v1.14
         with:
           architecture: 'x64'
           distribution: 'full'
-          variant: ${{ matrix.racket-variant }}
           version: ${{ matrix.racket-version }}
       - name: Install splitflap lib and dependencies
         run: raco pkg install --auto --batch --link splitflap-lib/
