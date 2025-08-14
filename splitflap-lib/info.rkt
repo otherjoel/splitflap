@@ -8,4 +8,5 @@
 
 (define compile-omit-paths '("private/build.rkt"))
 (define pkg-desc "implementation part of \"splitflap\"")
-(define license 'BlueOak-1.0.0)
+(define license 'LicenseRef-CreatorCxn-1.0)
+(define install-collection "private/install.rkt")

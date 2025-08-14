@@ -45,6 +45,13 @@
 (define (spec . args)
   (element (style "special" (list (color-property (list #x66 #x33 #x99)))) args))
 
+(define (callout . args)
+  (paragraph (style "callout" (list (color-property (list #x01 #x46 #x6c))
+                                    (css-style-addition aux-css)
+                                    (alt-tag "div")
+                                    (tex-addition aux-tex)))
+             args))
+
 (define-runtime-path flipboard-js "js/ticker-board.min.js")
 
 (define flipboard-div

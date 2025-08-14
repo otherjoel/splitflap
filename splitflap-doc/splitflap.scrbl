@@ -23,20 +23,10 @@ With this library, you are only made to supply the minimum set of data needed to
 But everything you supply is carefully validated, so that the result is either a fully valid feed or
 an exception.
 
-Please report any problems on @hyperlink["https://github.com/otherjoel/splitflap/issues"]{the Github
-repo}.
-
-@bold{Installation:} Splitflap requires Racket 8.1 or higher. To install this package from the
-command line:
-
-@terminal{
- @:>{raco pkg install splitflap}}
-
-Or using DrRacket: click the @onscreen{File} menu → @onscreen{Install Package …}.
-
-If deploying Splitflap in a production environment, you will probably want to use @tt{splitflap-lib}
-instead of @tt{splitflap}. This will avoid fetching/building this documentation, and will greatly
-reduce the number of dependencies installed.
+@callout{If you use Splitflap in your project, @hyperlink["mailto:joel@jdueck.net"]{email Joel} to
+introduce yourself! This is the sole condition of the project’s
+@hyperlink["https://github.com/otherjoel/splitflap/blob/main/LICENSE.md"]{permissive license.} (See
+@hyperlink["https://joeldueck.com/how-i-license.html"]{How I License} for background.)}
 
 @local-table-of-contents[]
 

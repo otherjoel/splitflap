@@ -1,15 +1,26 @@
 #lang scribble/manual
 
 @(require
+   "misc.rkt"
    scribble/examples
    (for-label splitflap racket/base))
 
 @title{Quick start}
 
-There are four simple steps to building a feed with this library:
+@;===============================================
 
-@(define tutorial (make-base-eval #:lang 'racket/base))
-@(tutorial '(require splitflap))
+@section{Installation}
+
+To install this package from the command line:
+
+@terminal{
+ @:>{raco pkg install splitflap}}
+
+Or using DrRacket: click the @onscreen{File} menu → @onscreen{Install Package …}.
+
+If deploying Splitflap in a production environment, you will probably want to use @tt{splitflap-lib}
+instead of @tt{splitflap}. This will avoid fetching/building this documentation, and will greatly
+reduce the number of dependencies installed.
 
 @section{Step 1: Mint a tag URI}
 
@@ -17,6 +28,8 @@ Every feed needs a globally unique identifier, and this library requires you to 
 for this purpose. To mint a tag URI, you provide three things: a domain (or an email address); a
 date, and a specific identifier:
 
+@(define tutorial (make-base-eval #:lang 'racket/base))
+@(tutorial '(require splitflap))
 @(examples
   #:eval tutorial
   #:label #false

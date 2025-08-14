@@ -9,6 +9,14 @@ Everything you supply is validated, so the result is always either a valid feed 
 
 **Documentation is at <https://joeldueck.com/what-about/splitflap>**
 
+> [!NOTE] 
+> The only condition of Splitflap's [permissive license](LICENSE.md) is that you introduce yourself
+to me by emailing me at <joel@jdueck.net>. See [How I License][hil] for more background.
+
+[hil]: https://joeldueck.com/how-i-license.html
+
+## Installation
+
 Splitflap requires Racket 8.1 or higher. To install Splitflap from the command line:
 
     > raco pkg install splitflap
