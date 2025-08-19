@@ -17,4 +17,4 @@
 (define update-implies '("splitflap-lib"))
 (define compile-omit-paths '("js" "styles"))
 (define pkg-desc "documentation part of \"splitflap\"")
-(define license 'BlueOak-1.0.0)
+(define license 'LicenseRef-CreatorCxn-1.0)
