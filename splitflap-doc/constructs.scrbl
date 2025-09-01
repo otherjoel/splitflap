@@ -143,12 +143,12 @@ of a @tech{tag URI} programmatically.
 
 @examples[#:eval mod-constructs
           (tag-specific-string? "my blog")
-          (normalize-tag-specific "my-blog")
-          (tag-specific-string? (normalize-tag-specific "my-blog"))
+          (normalize-tag-specific "my blog")
+          (tag-specific-string? (normalize-tag-specific "my blog"))
 
-          (tag-specific-string? " tra^^shy\\` GarB§ºage ###")
-          (normalize-tag-specific " tra^^shy\\` GarB§ºage ###")
-          (tag-specific-string? (normalize-tag-specific " tra^^shy\\` GarB§ºage ###"))]
+          (tag-specific-string? " tra^^shy\\`  GarB§ºage ###")
+          (normalize-tag-specific " tra^^shy\\`  GarB§ºage ###")
+          (tag-specific-string? (normalize-tag-specific " tra^^shy\\`  GarB§ºage ###"))]
 
 }
 
