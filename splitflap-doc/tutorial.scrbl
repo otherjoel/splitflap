@@ -30,12 +30,15 @@ date, and a specific identifier:
 
 @(define tutorial (make-base-eval #:lang 'racket/base))
 @(tutorial '(require splitflap))
-@(examples
-  #:eval tutorial
-  #:label #false
-  (define my-id (mint-tag-uri "example.com" "2012" "blog")))
+@(tutorial '(define my-id (mint-tag-uri "example.com" "2012" "blog")))
 
-The idiomatic route is to create a tag URI for the entire feed, and then append to that URI to
+@racketblock[
+(require splitflap)
+
+(define my-id (mint-tag-uri "example.com" "2012" "blog"))
+]
+
+The happy path is to create a tag URI for the entire feed, and then append to that URI to
 create tag URIs for the individual items in that feed.
 
 See @tech{Tag URIs} for more information.
