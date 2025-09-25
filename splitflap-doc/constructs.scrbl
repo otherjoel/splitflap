@@ -19,7 +19,8 @@
 @(define mod-constructs (make-base-eval #:lang 'racket/base))
 @(mod-constructs '(require splitflap gregor racket/file racket/promise))
 
-@defmodule[splitflap/constructs]
+@declare-exporting[splitflap/constructs splitflap]
+@defmodule[splitflap/constructs #:no-declare]{
 
 The format of feeds is specified by the @Atom1.0[] and @RSS2.0[] specifications (and, for all
 practical purposes, by @AppleRequirements[] in the case of podcasts). These in turn reference other
@@ -32,6 +33,8 @@ cases where it makes things simpler, Splitflap is a bit @emph{more} strict than 
 
 The bindings documented in this section are provided by the main @racketmodname[splitflap] module
 as well as by @racketmodname[splitflap/constructs].
+
+}
 
 @section{Tag URIs}
 

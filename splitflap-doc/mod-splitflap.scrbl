@@ -13,7 +13,11 @@
               xml)
    (for-syntax racket/base racket/syntax))
 
-@title[#:tag "mod-splitflapp"]{Library Reference}
+@title[#:tag "mod-splitflap"]{Library Reference}
+
+@defmodule[splitflap]
+
+This module also reprovides the bindings from @racketmodname[splitflap/constructs].
 
 @(define mod-feed (make-base-eval #:lang 'racket/base))
 @(mod-feed '(require splitflap))
