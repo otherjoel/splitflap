@@ -12,7 +12,6 @@
                      racket/promise
                      racket/string
                      splitflap
-                     splitflap/constructs
                      txexpr))
 
 @title[#:tag "mod-constructs"]{Feed Constructs}

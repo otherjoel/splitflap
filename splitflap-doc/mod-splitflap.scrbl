@@ -3,7 +3,7 @@
 @(require
    "misc.rkt"
    scribble/examples
-   (for-label splitflap 
+   (for-label splitflap
               (except-in gregor date? date)
               (only-in net/url url?)
               racket/base 

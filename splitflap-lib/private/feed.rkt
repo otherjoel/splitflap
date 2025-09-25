@@ -12,11 +12,11 @@
          racket/promise
          (only-in racket/string
                   non-empty-string?)
-         xml
-         "dust.rkt"
-         "validation.rkt"
-         "version.rkt"
-         "xml-generic.rkt")
+         splitflap/private/dust
+         splitflap/private/validation
+         splitflap/private/version
+         splitflap/private/xml-generic
+         xml)
 
 (provide food?
          (contract-out

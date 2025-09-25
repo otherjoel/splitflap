@@ -1,8 +1,6 @@
 #lang racket/base
 
-(require "dust.rkt"
-         "xml-generic.rkt"
-         gregor
+(require gregor
          net/url-string
          racket/contract
          racket/match
@@ -10,6 +8,8 @@
          racket/promise
          racket/runtime-path
          racket/string
+         splitflap/private/dust
+         splitflap/private/xml-generic
          xml)
 
 (provide dns-domain?

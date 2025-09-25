@@ -3,9 +3,9 @@
 ;;
 ;; Predicates and constructors for Dates, Persons, Tag URIs, URLs, email addresses and enclosures
 
-(require "private/validation.rkt"
-         (only-in "private/dust.rkt" txexpr?)
-         gregor
+(require gregor
+         splitflap/private/validation
+         (only-in splitflap/private/dust txexpr?)
          racket/contract)
 
 (provide dns-domain?

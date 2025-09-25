@@ -1,7 +1,7 @@
 #lang racket/base
 
-(require "constructs.rkt"
-         "private/feed.rkt")
+(require splitflap/constructs
+         splitflap/private/feed)
 
-(provide (all-from-out "constructs.rkt")
-         (all-from-out "private/feed.rkt"))
+(provide (all-from-out splitflap/constructs)
+         (all-from-out splitflap/private/feed))
