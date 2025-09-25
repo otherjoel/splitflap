@@ -147,8 +147,8 @@ stylesheet for the feed.}
 @defparam[include-generator? incl? boolean? #:value #t]{
 
 When set to @racket[#t], @racket[express-xml] will include a @tt{generator} element in the feed
-generated for a @racket[feed] or @racket[podcast], naming @tt{Racket vN.n [cs/3m] / splitflap vN.n}
-as the generator of the feed.
+generated for a @racket[feed] or @racket[podcast], naming @tt{Splitflap vN.n} as the generator of
+the feed.
 
 }
 

@@ -63,17 +63,12 @@
 (define feed-language (make-parameter #f))
 
 ;; Build the <generator> tag (caches for each dialect)
-(define generator
-  (let ([cache (make-hash)])
-    (λ (dialect)
-      (hash-ref!
-       cache
-       dialect
-       (λ ()
-         (define gen-str (format "Racket v~a [~a] + splitflap v~a" (version) (system-type 'gc) (splitflap-version)))
-         (case dialect
-           [(rss) `(generator ,(string-append gen-str " (https://racket-lang.org)"))]
-           [(atom) `(generator [[uri "https://racket-lang.org"] [version ,(version)]] ,gen-str)]))))))
+(define (generator dialect)
+  (define splitflap-url "https://joeldueck.com/what-about/splitflap")
+  (define ver (splitflap-version))
+  (case dialect
+    [(rss) `(generator ,(format "Splitflap ~a (~a)" ver splitflap-url))]
+    [(atom) `(generator [[uri ,splitflap-url] [version ,ver]] "Splitflap")]))
 
 ;; Parameter determines whether feed output will include a <generator> tag
 ;; Useful for keeping unit tests from breaking on different versions
