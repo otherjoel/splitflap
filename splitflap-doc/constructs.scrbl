@@ -287,8 +287,8 @@ This procedure accesses the filesystem; if @racket[_file] does not exist, an exc
 @defthing[mime-types-by-ext (promise/c (hash/c symbol? string?))]{
 
 @margin-note{This table is built directly from
-@hyperlink["https://svn.apache.org/viewvc/httpd/httpd/trunk/docs/conf/mime.types?view=markup"]{the
-list maintained in the Apache SVN repository}.}
+@hyperlink["https://github.com/apache/httpd/blob/trunk/docs/conf/mime.types"]{the list maintained in
+the Apache @tt{httpd} repository}.}
 
 A @tech[#:doc '(lib "scribblings/reference/reference.scrbl")]{promise} that, when @racket[force]d,
 yields a hash table mapping file extensions (in lowercase symbol form) to MIME types.

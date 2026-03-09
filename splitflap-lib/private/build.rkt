@@ -44,7 +44,7 @@
 ;; This function is never “armed” in the public package!
 ;; Check for recent updates: https://github.com/apache/httpd/commits/trunk/docs/conf/mime.types
 #;(define (download-mime-types)
-  (define mime-types-url (string->url "https://svn.apache.org/repos/asf/httpd/httpd/trunk/docs/conf/mime.types"))
+  (define mime-types-url (string->url "https://raw.githubusercontent.com/apache/httpd/refs/heads/trunk/docs/conf/mime.types"))
   (define mimetypes-lines (port->lines (get-pure-port mime-types-url)))
   (define extensions-table
     (let loop ([lines mimetypes-lines]
