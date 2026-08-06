@@ -284,17 +284,19 @@ This procedure accesses the filesystem; if @racket[_file] does not exist, an exc
           (delete-file audio-file)]
 }
 
-@defthing[mime-types-by-ext (promise/c (hash/c symbol? string?))]{
+@defthing[mime-types-by-ext (hash/c symbol? string?)]{
 
 @margin-note{This table is built directly from
 @hyperlink["https://github.com/apache/httpd/blob/trunk/docs/conf/mime.types"]{the list maintained in
 the Apache @tt{httpd} repository}.}
 
-A @tech[#:doc '(lib "scribblings/reference/reference.scrbl")]{promise} that, when @racket[force]d,
-yields a hash table mapping file extensions (in lowercase symbol form) to MIME types.
+A hash table mapping file extensions (in lowercase symbol form) to MIME types.
 
 @examples[#:eval mod-constructs
-          (hash-ref (force mime-types-by-ext) 'epub)]
+          (hash-ref mime-types-by-ext 'epub)]
+
+@history[#:changed "1.3" @elem{Now a plain hash rather than a
+ @tech[#:doc '(lib "scribblings/reference/reference.scrbl")]{promise}.}]
 
 }
 

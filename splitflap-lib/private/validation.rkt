@@ -5,8 +5,8 @@
          racket/contract
          racket/match
          racket/path
+         racket/include
          racket/promise
-         racket/runtime-path
          racket/string
          splitflap/private/dust
          splitflap/private/xml-generic
@@ -276,22 +276,18 @@
 
 ;; ~~ MIME types ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-(define-runtime-path mime-types.rktd "mime-types.rktd")
-
 (define mime-types-by-ext
-  (delay/sync (with-input-from-file mime-types.rktd (lambda () (read)))))
+  (include (lib "splitflap/private/mime-types.rktd")))
 
 ;; Return a MIME type for a given file extension.
 ;; MIME types are not required; if unknown, the type should not be specified.
 (define (path/string->mime-type p)
   (match (if (path? p) (path->string p) p)
     [(regexp #rx".*\\.([^\\.]*$)" (list _ ext))
-     (hash-ref (force mime-types-by-ext)
+     (hash-ref mime-types-by-ext
                (string->symbol (string-downcase ext))
                #f)]
     [_ #f]))
-
-
 
 ;; ~~ Enclosures ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

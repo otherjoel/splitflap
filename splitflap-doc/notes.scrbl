@@ -2,7 +2,7 @@
 
 @(require "misc.rkt"
           splitflap/private/version
-          (for-label splitflap xml))
+          (for-label splitflap xml racket/promise))
 
 @title{Package Notes (@splitflap-version[])}
 
@@ -25,6 +25,16 @@ validate strings according to some alternative scheme that allows for non-ASCII 
 to do this correctly, though, I need to educate myself about any standards that exist in this area.
 
 @section{Version History}
+
+@subsection{Version 1.3}
+
+@itemlist[#:style 'compact
+
+@item{Made @racket[mime-types-by-ext] a plain hash table rather than a
+@tech[#:doc '(lib "scribblings/reference/reference.scrbl")]{promise}. You no longer need to use
+@racket[force] to access the table (though that will still work).}
+
+]
 
 @subsection{Version 1.2}
 

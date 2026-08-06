@@ -46,7 +46,7 @@
          (struct-out enclosure)
          file->enclosure
          (contract-out
-          [mime-types-by-ext (promise/c (hash/c symbol? string? #:immutable #t))]
+          [mime-types-by-ext (hash/c symbol? string? #:immutable #t)]
           [path/string->mime-type (-> path-string? (or/c string? #f))])
          
          ; Language codes
