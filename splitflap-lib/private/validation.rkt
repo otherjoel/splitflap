@@ -6,6 +6,7 @@
          racket/match
          racket/path
          racket/include
+         racket/list
          racket/promise
          racket/string
          splitflap/private/dust
@@ -15,6 +16,7 @@
 (provide dns-domain?
          email-address?
          validate-email-address
+         tag-authority?
          tag-entity-date?
          tag-specific-string?
          tag-uri?
@@ -56,40 +58,49 @@
 ;; start with a letter, end with a letter or digit, and have as interior
 ;; characters only letters, digits, and hyphen.
 ;;
-;; Per RFC 1035, each labels must be 63 characters or less including 1
-;; byte for a length header in front of each label; and the total name length
-;; must be 255 bytes or less including those header bytes.
+;; RFC 1123 section 2.1 allows labels to start with a digit, and RFC 3696
+;; section 2 forbids an all-numeric top-level label.
+;;
+;; RFC 1035 limits labels to 63 octets and names to 255 octets, counting a
+;; length octet per label and a zero octet for the root; as text, that is 253
+;; characters.
 
 (define-explained-contract (dns-domain? val)
   "valid RFC 1035 domain name"
-  (and
-   (string? val)
-   (<
-    (for/sum ([label (in-list (string-split val "." #:trim? #f))])
-      (define label-length (bytes-length (string->bytes/utf-8 label)))
-      (cond [(and (< label-length 63)
-                  (regexp-match? #rx"^[a-zA-Z]([a-zA-Z0-9-]*[a-zA-Z0-9])?$" label))
-             (+ 1 label-length)] ; Add one byte for length header per label
-            [else 256])) ; use the length limit to disqualify the whole string if any one label is invalid
-    256)))
+  (and (string? val)
+       (<= 1 (string-length val) 253)
+       (let ([labels (string-split val "." #:trim? #f)])
+         (and (for/and ([label (in-list labels)])
+                (regexp-match? #px"^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$" label))
+              (not (regexp-match? #px"^[0-9]+$" (last labels)))))))
 
 
 
 ;; ~~ Email address validation (subset of RFC5322) ~~~~~~~~~
 
+(define (email-address-problem str)
+  (define parts (regexp-split #rx"@" str))
+  (define local-part (car parts))
+  (define domain (if (null? (cdr parts)) "" (cadr parts)))
+  (cond
+    [(> (string-length str) 254) (list "address" "must be no longer than 254 bytes" str)]
+    [(null? (cdr parts)) (list "address" "must contain @ sign" str)]
+    [(pair? (cddr parts)) (list "address" "must not contain more than one @ sign" str)]
+    [(equal? domain "") (list "domain" "is missing" "")]
+    [(equal? local-part "") (list "local-part" "is missing" "")]
+    [(> (string-length local-part) 64) (list "local part" "must be no longer than 64 bytes" local-part)]
+    [(not (dns-domain? domain)) (list "domain" "must be a valid RFC 1035 domain name" domain)]
+    [(string-prefix? local-part ".") (list "local part" "must not start with a period" local-part)]
+    [(string-suffix? local-part ".") (list "local part" "must not end with a period" local-part)]
+    [(string-contains? local-part "..")
+     (list "local part" "must not contain two periods in a row" local-part)]
+    [(not (regexp-match? #px"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+$" local-part))
+     (list "local part" "may only include a–z, A–Z, 0–9, or !#$%&'*+/=?^_`{|}~-." local-part)]
+    [else #f]))
+
 (define-explained-contract (email-address? str)
-  "a valid RFC 5322 email address"      
-  (and (string? str)
-       (< (string-length str) 255) ; SMTP can handle a max of 254 characters
-       (let-values
-           ([(local-part domain)
-             (match (string-split str "@")
-               [(list loc dom) (values loc dom)]
-               [_ (values #f #f)])])
-         (and local-part
-              (< (string-length local-part) 65)
-              (dns-domain? domain)
-              (regexp-match? #px"[a-z0-9!#$%&'*+/=?^_‘{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_‘{|}~-]+)*" local-part)))))
+  "a valid RFC 5322 email address"
+  (and (string? str) (not (email-address-problem str))))
 
 (define (email-error noun has-problem bad str)
   (raise-arguments-error 'validate-email-address (format "~a ~a" noun has-problem) noun bad "in" str))
@@ -99,26 +110,10 @@
 ;; #px"^(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\\[\\]-\x7f]|\\\\[\x01-\x09\x0b\x0c\x0e-\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\\])$" str)))
 
 (define (validate-email-address str)
-  (unless (string? str) (raise-argument-error 'validate-email "string" str))
-  (unless (< (string-length str) 255)
-    (raise-argument-error 'validate-email "string no more than 254 bytes in length" str))
-  (unless (string-contains? str "@") (email-error "address" "must contain @ sign" str str))
-  (unless (not (regexp-match? #rx"@[^@]*@" str)) (email-error "address" "must not contain more than one @ sign" str str))
-  (unless (not (regexp-match? #rx"@$" str)) (email-error "domain" "is missing" "" str))
-  (unless (not (regexp-match? #rx"^@" str)) (email-error "local-part" "is missing" "" str))
-
-  (match-define (list local-part domain) (string-split str "@"))
-  (unless (< (string-length local-part) 65)
-    (email-error "local part" "must be no longer than 64 bytes" local-part str))
-  (unless (dns-domain? domain)
-    (email-error "domain" "must be a valid RFC 1035 domain name" domain str))
-  (unless (not (regexp-match? #rx"^\\." local-part))
-    (email-error "local part" "must not start with a period" local-part str))
-  (unless (regexp-match #rx"^[\\.a-z0-9!#$%&'*+/=?^_‘{|}~-]+$" local-part)
-    (email-error "local part" "may only include a–z, A–Z, 0–9, or !#$%&'*+/=?^_‘{|}~-."
-                 local-part
-                 str))
-  str)
+  (unless (string? str) (raise-argument-error 'validate-email-address "string?" str))
+  (match (email-address-problem str)
+    [#f str]
+    [(list noun has-problem bad) (email-error noun has-problem bad str)]))
 
 
 
@@ -179,6 +174,11 @@
   "a string containing only a–z, A–Z, 0–9 or chars in the set -._~~!$&'()*+,;=:@/?"
   (and (string? val)
        (regexp-match? #px"^[a-zA-Z0-9_.~,;=$&'@\\!\\(\\)\\*\\+\\:\\?\\/\\-]*$" val)))
+
+(define-explained-contract (tag-authority? val)
+  "a lowercase domain name or email address, with only a–z, 0–9, -, . or _ before any @"
+  (and (or (dns-domain? val) (email-address? val))
+       (regexp-match? #px"^(?:[a-z0-9._-]+@)?[a-z0-9.-]+$" val)))
 
 (define-explained-contract (tag-entity-date? val)
   "an RFC 4151 date string in the format YYYY[-MM[-DD]]"

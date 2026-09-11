@@ -26,6 +26,26 @@ to do this correctly, though, I need to educate myself about any standards that 
 
 @section{Version History}
 
+@subsection{Version 1.4}
+
+@itemlist[#:style 'compact
+
+@item{@racket[dns-domain?] now allows labels that start with a digit (per RFC 1123) and labels of up
+to 63 bytes; limits domains to 253 bytes; and no longer accepts the empty string. As a result,
+@racket[valid-url-string?] no longer accepts URLs with an empty host.}
+
+@item{@racket[email-address?] now checks the entire local part (previously one allowed character was
+enough), and it now applies exactly the same rules as @racket[validate-email-address]. Both accept
+uppercase letters and @litchar{`}, and both reject local parts that start or end with a period or
+contain two periods in a row.}
+
+@item{Added @racket[tag-authority?]. @racket[mint-tag-uri] now requires a lowercase authority, and
+allows only @litchar{a–z}, @litchar{0–9}, @litchar{-}, @litchar{.} and @litchar{_} before the
+@litchar{@"@"} of an email authority, per RFC 4151. The @W3CFeedValidator[] rejects Atom feeds whose
+tag URIs use other authorities.}
+
+]
+
 @subsection{Version 1.3}
 
 @itemlist[#:style 'compact
