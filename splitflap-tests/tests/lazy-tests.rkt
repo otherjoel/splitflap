@@ -18,5 +18,8 @@
                         'atom
                         "https://example.com/feed.atom")))
   (check-false (module-declared? 'splitflap/private/idna #f))
+  (check-false (module-declared? 'splitflap/private/mime-types #f))
   (eval '(domain->ascii "bücher.example"))
-  (check-true (module-declared? 'splitflap/private/idna #f)))
+  (check-true (module-declared? 'splitflap/private/idna #f))
+  (eval '(path/string->mime-type "episode.mp3"))
+  (check-true (module-declared? 'splitflap/private/mime-types #f)))

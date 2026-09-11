@@ -1,11 +1,12 @@
 #lang racket/base
 
-(require gregor
+(require (for-syntax racket/base
+                     syntax/transformer)
+         gregor
          net/url-string
          racket/contract
          racket/match
          racket/path
-         racket/include
          racket/lazy-require
          racket/list
          racket/promise
@@ -14,7 +15,8 @@
          splitflap/private/xml-generic
          xml)
 
-(lazy-require [splitflap/private/idna (u-label->a-label a-label->u-label bidi-rule-violation)])
+(lazy-require [splitflap/private/idna (u-label->a-label a-label->u-label bidi-rule-violation)]
+              [splitflap/private/mime-types (mime-types-table path/string->mime-type)])
 
 (provide dns-domain?
          domain->ascii
@@ -379,18 +381,8 @@
 
 ;; ~~ MIME types ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-(define mime-types-by-ext
-  (include (lib "splitflap/private/mime-types.rktd")))
-
-;; Return a MIME type for a given file extension.
-;; MIME types are not required; if unknown, the type should not be specified.
-(define (path/string->mime-type p)
-  (match (if (path? p) (path->string p) p)
-    [(regexp #rx".*\\.([^\\.]*$)" (list _ ext))
-     (hash-ref mime-types-by-ext
-               (string->symbol (string-downcase ext))
-               #f)]
-    [_ #f]))
+(define-syntax mime-types-by-ext
+  (make-variable-like-transformer #'(mime-types-table)))
 
 ;; ~~ Enclosures ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
