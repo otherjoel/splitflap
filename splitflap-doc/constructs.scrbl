@@ -359,6 +359,10 @@ according to @hyperlink["https://datatracker.ietf.org/doc/html/rfc1035"]{RFC 103
 
 @item{Labels may not start or end with a hyphen.}
 
+@item{Labels with @litchar{--} in the third and fourth positions must be valid @tech{A-labels} (see
+@secref["idn"]). If any A-label contains right-to-left text, every label must satisfy the Bidi rule
+of @hyperlink["https://datatracker.ietf.org/doc/html/rfc5893"]{RFC 5893}.}
+
 @item{The last label may not consist entirely of digits (see
 @hyperlink["https://datatracker.ietf.org/doc/html/rfc3696#section-2"]{RFC 3696}), so IPv4 addresses
 never qualify.}
@@ -376,6 +380,8 @@ label and a zero byte for the root label.)}
           (dns-domain? "a.b1000.com")
           (dns-domain? "1.example.com")
           (dns-domain? "192.0.2.16")
+          (dns-domain? "xn--bcher-kva.example")
+          (dns-domain? "bücher.example")
           code:blank
           (define longest-valid-label (make-string 63 #\a))
           (define longest-valid-domain
@@ -391,7 +397,8 @@ label and a zero byte for the root label.)}
           (dns-domain? (string-append longest-valid-domain "a"))]
 
 @history[#:changed "1.4" @elem{Labels may now start with a digit. The length limits are now 63 bytes
-per label and 253 bytes overall (previously 62 and 254). The empty string no longer qualifies.}]
+per label and 253 bytes overall (previously 62 and 254). The empty string no longer qualifies.
+Labels with @litchar{--} in the third and fourth positions must now be valid A-labels.}]
 }
 
 @defproc[(valid-url-string? [v any/c]) boolean?]{
@@ -399,7 +406,8 @@ per label and 253 bytes overall (previously 62 and 254). The empty string no lon
 Returns @racket[#t] if @racket[_v] is a “valid URL” for use in feeds. For this library’s purposes, a
 valid URL is one which, when parsed with @racket[string->url], includes a valid @tt{scheme} part
 (e.g. @racket{http://}), and in which the host is a @racket[dns-domain?] (and not, say, an IP
-address).
+address). The URL must also contain only ASCII characters; use @racket[url-string->ascii] to convert
+an internationalized URL.
 
 @examples[#:eval mod-constructs
           (valid-url-string? "http://rclib.example.com")
@@ -414,10 +422,11 @@ address).
           code:blank
           (code:line (code:comment @#,elem{Valid URLs but not allowed by this library for use in feeds}))
           (code:line (valid-url-string? "ldap://[2001:db8::7]/c=GB?objectClass?one") (code:comment @#,elem{Host is not a DNS domain}))
-          (code:line (valid-url-string? "telnet://192.0.2.16:80/") (code:comment @#,elem{ditto}))]
+          (code:line (valid-url-string? "telnet://192.0.2.16:80/") (code:comment @#,elem{ditto}))
+          (code:line (valid-url-string? "https://bücher.example/") (code:comment @#,elem{not ASCII; see url-string->ascii}))]
 
 @history[#:changed "1.4" @elem{Follows the changes to @racket[dns-domain?]. In particular, URLs with
-an empty host no longer qualify.}]
+an empty host no longer qualify. URLs must now contain only ASCII characters.}]
 
 }
 
@@ -504,6 +513,89 @@ address is invalid.
 
 @history[#:changed "1.4" @elem{Now accepts and rejects exactly the same addresses as
 @racket[email-address?]. Previously it rejected local parts containing uppercase letters.}]
+
+}
+
+@subsection[#:tag "idn"]{Internationalized domain names}
+
+Domain names, URLs and email addresses in feeds must be ASCII. Use the functions in this section to
+convert internationalized domain names to their ASCII form, in which each label that contains
+non-ASCII characters is replaced by its @deftech{A-label}: the prefix @litchar{xn--} followed by the
+@hyperlink["https://datatracker.ietf.org/doc/html/rfc3492"]{Punycode} encoding of the label (so
+@racket{bücher} becomes @racket{xn--bcher-kva}).
+
+Splitflap follows @hyperlink["https://datatracker.ietf.org/doc/html/rfc5891"]{IDNA2008} strictly:
+
+@itemlist[
+
+@item{Each label must pass the IDNA2008 registration checks: it must be in Unicode Normalization
+Form C, may not start with a combining mark or contain characters that IDNA2008 disallows, and must
+satisfy the contextual rules of @hyperlink["https://datatracker.ietf.org/doc/html/rfc5892"]{RFC
+5892}. If any label contains right-to-left characters, every label must satisfy the Bidi rule of
+@hyperlink["https://datatracker.ietf.org/doc/html/rfc5893"]{RFC 5893}.}
+
+@item{Nothing is mapped: for example, uppercase letters are not converted to lowercase, and the
+ideographic full stop @litchar{。} is not treated as a label separator. When a domain name fails only
+because it needs mapping of this kind, the exception message suggests the mapped form.}
+
+@item{Character properties come from IANA’s
+@hyperlink["https://www.iana.org/assignments/idna-tables-12.0.0/idna-tables-12.0.0.xhtml"]{IDNA
+tables for Unicode 12.0.0}, the most recent version IANA has published. Characters added to Unicode
+after version 12.0.0 are rejected.}
+
+@item{Labels that are already ASCII are never changed (but they are still checked).}
+
+]
+
+These rules ensure that a given domain name always converts to the same A-labels. This matters for
+@tech{tag URIs}, which must never change once published: the older IDNA2003 standard and the
+“transitional” processing in @hyperlink["https://www.unicode.org/reports/tr46/"]{UTS #46} convert
+@racket{faß.de} to @racket{fass.de}, for example, while IDNA2008 produces @racket{xn--fa-hia.de}.
+
+@defproc[(domain->ascii [domain string?]) dns-domain?]{
+
+Returns the ASCII form of @racket[_domain], replacing each label that contains non-ASCII characters
+with its @tech{A-label}. An exception is raised if @racket[_domain] is not a valid domain name.
+
+@examples[#:eval mod-constructs
+          (domain->ascii "bücher.example")
+          (domain->ascii "faß.de")
+          (domain->ascii "例え.テスト")
+          (domain->ascii "rclib.example.com")
+          (eval:error (domain->ascii "Bücher.example"))]
+
+@history[#:added "1.4"]
+
+}
+
+@defproc[(url-string->ascii [url string?]) valid-url-string?]{
+
+Converts @racket[_url] to a URL that contains only ASCII characters, following
+@hyperlink["https://datatracker.ietf.org/doc/html/rfc3987#section-3.1"]{RFC 3987}: the host is
+converted with @racket[domain->ascii], and all other non-ASCII characters are percent-encoded as
+UTF-8. ASCII characters are never changed. An exception is raised if the result is not a
+@racket[valid-url-string?].
+
+@examples[#:eval mod-constructs
+          (url-string->ascii "https://bücher.example/straße?q=ü")
+          (url-string->ascii "https://rclib.example.com/my%20file.html")]
+
+@history[#:added "1.4"]
+
+}
+
+@defproc[(email-address->ascii [addr string?]) email-address?]{
+
+Returns @racket[_addr] with its domain converted by @racket[domain->ascii]. The local part (before
+the @litchar{@"@"}) must already be ASCII: internationalized local parts have no ASCII form
+(@hyperlink["https://datatracker.ietf.org/doc/html/rfc6530"]{RFC 6530}), and the @Atom1.0[] spec
+does not allow them. An exception is raised if the result is not an @racket[email-address?].
+
+@examples[#:eval mod-constructs
+          (email-address->ascii "marian@bücher.example")
+          (eval:error (email-address->ascii "marían@example.com"))]
+
+@history[#:added "1.4"]
 
 }
 

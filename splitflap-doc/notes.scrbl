@@ -13,16 +13,13 @@ Splitflap can be considered stable. No backward-incompatible changes are planned
 See Splitflap’s @hyperlink["https://github.com/otherjoel/splitflap/issues"]{issues tracker on Github}
 for any known problems with the library, or to report problems.
 
-@subsection{Non-ASCII email addresses and domains}
+@subsection{Non-ASCII email addresses}
 
-The @Atom1.0[] and @RSS2.0[] specs do not contemplate or allow for the use of non-ASCII characters
-in email addresses or domain names, which is a defect considering that non-English alphabets are in
-widespread use for both of these things.
-
-At this early stage I have chosen to enforce the standards as written, for consistency’s sake. I do
-plan to add a parameter which would cause @racket[dns-domain?] and @racket[email-address?] to
-validate strings according to some alternative scheme that allows for non-ASCII characters. In order
-to do this correctly, though, I need to educate myself about any standards that exist in this area.
+Splitflap can convert internationalized domain names and URLs to their ASCII form (see
+@secref["idn"]), but it cannot include an email address whose local part (the part before the
+@litchar{@"@"}) contains non-ASCII characters. Such addresses have no ASCII form
+(@hyperlink["https://datatracker.ietf.org/doc/html/rfc6530"]{RFC 6530}), and the @Atom1.0[] spec
+requires email addresses to conform to RFC 2822, which allows only ASCII.
 
 @section{Version History}
 
@@ -43,6 +40,13 @@ contain two periods in a row.}
 allows only @litchar{a–z}, @litchar{0–9}, @litchar{-}, @litchar{.} and @litchar{_} before the
 @litchar{@"@"} of an email authority, per RFC 4151. The @W3CFeedValidator[] rejects Atom feeds whose
 tag URIs use other authorities.}
+
+@item{Added @racket[domain->ascii], @racket[url-string->ascii] and @racket[email-address->ascii],
+which convert internationalized domain names and URLs to ASCII according to IDNA2008 (see
+@secref["idn"]). @racket[dns-domain?] now requires labels with @litchar{--} in the third and fourth
+positions to be valid A-labels, and @racket[valid-url-string?] now rejects URLs that contain
+non-ASCII characters. The IDNA code and tables are loaded only when a domain name contains a
+non-ASCII or @litchar{xn--} label.}
 
 ]
 

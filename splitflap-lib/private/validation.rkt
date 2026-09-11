@@ -6,6 +6,7 @@
          racket/match
          racket/path
          racket/include
+         racket/lazy-require
          racket/list
          racket/promise
          racket/string
@@ -13,9 +14,13 @@
          splitflap/private/xml-generic
          xml)
 
+(lazy-require [splitflap/private/idna (u-label->a-label a-label->u-label bidi-rule-violation)])
+
 (provide dns-domain?
+         domain->ascii
          email-address?
          validate-email-address
+         email-address->ascii
          tag-authority?
          tag-entity-date?
          tag-specific-string?
@@ -38,6 +43,7 @@
          valid-url-string?
          url-domain
          url-join
+         url-string->ascii
          iso-639-language-code?
          language-codes
          system-language)
@@ -66,13 +72,63 @@
 ;; characters.
 
 (define-explained-contract (dns-domain? val)
-  "valid RFC 1035 domain name"
+  "valid RFC 1035 domain name (see domain->ascii for internationalized domain names)"
   (and (string? val)
-       (<= 1 (string-length val) 253)
-       (let ([labels (string-split val "." #:trim? #f)])
-         (and (for/and ([label (in-list labels)])
-                (regexp-match? #px"^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$" label))
-              (not (regexp-match? #px"^[0-9]+$" (last labels)))))))
+       (ascii-string? val)
+       (string? (domain->ascii/problem val))))
+
+(define (convert-label label)
+  (cond
+    [(equal? label "") (domain-problem "domain may not contain an empty label" '())]
+    [(not (ascii-string? label))
+     (define a-label (u-label->a-label label))
+     (if (string? a-label) (cons a-label label) a-label)]
+    [(not (regexp-match? #px"^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$" label))
+     (domain-problem (string-append "label may only use a–z, A–Z, 0–9 and -, may not start or end "
+                                    "with -, and may not be longer than 63 characters")
+                     (list "label" label))]
+    [(regexp-match? #rx"^[xX][nN]--" label)
+     (define u-label (a-label->u-label label))
+     (if (string? u-label) (cons label u-label) u-label)]
+    [(regexp-match? #rx"^..--" label)
+     (domain-problem "label may not have -- in the third and fourth positions unless it starts with xn--"
+                     (list "label" label))]
+    [else (cons label label)]))
+
+(define (domain->ascii/problem str)
+  (define labels (map convert-label (string-split str "." #:trim? #f)))
+  (define ascii (and (andmap pair? labels) (string-join (map car labels) ".")))
+  (cond
+    [(null? labels) (domain-problem "domain is empty" '())]
+    [(findf domain-problem? labels) => values]
+    [(let ([unicode-labels (map cdr labels)])
+       (and (not (andmap ascii-string? unicode-labels))
+            (bidi-rule-violation unicode-labels)))
+     => (λ (label)
+          (domain-problem "label does not satisfy the Bidi rule for right-to-left text (RFC 5893)"
+                          (list "label" label)))]
+    [(> (string-length ascii) 253)
+     (domain-problem "domain is longer than 253 characters" (list "ASCII form" ascii))]
+    [(regexp-match? #px"^[0-9]+$" (car (last labels)))
+     (domain-problem "last label may not consist only of digits" (list "label" (car (last labels))))]
+    [else ascii]))
+
+(define (raise-domain-problem who problem str)
+  (define mapped
+    (string-normalize-nfkc (string-foldcase (regexp-replace* #rx"[。．｡]" str "."))))
+  (define suggestion
+    (and (not (string=? mapped str)) (string? (domain->ascii/problem mapped)) mapped))
+  (apply raise-arguments-error who (domain-problem-message problem)
+         (append (domain-problem-details problem)
+                 (list "in" str)
+                 (if suggestion (list "suggestion" suggestion) '()))))
+
+(define (convert-domain who str)
+  (define result (domain->ascii/problem str))
+  (if (string? result) result (raise-domain-problem who result str)))
+
+(define (domain->ascii str)
+  (convert-domain 'domain->ascii str))
 
 
 
@@ -99,7 +155,7 @@
     [else #f]))
 
 (define-explained-contract (email-address? str)
-  "a valid RFC 5322 email address"
+  "a valid RFC 5322 email address (see email-address->ascii for internationalized domain names)"
   (and (string? str) (not (email-address-problem str))))
 
 (define (email-error noun has-problem bad str)
@@ -115,6 +171,21 @@
     [#f str]
     [(list noun has-problem bad) (email-error noun has-problem bad str)]))
 
+(define (email-address->ascii str)
+  (define converted
+    (match (regexp-split #rx"@" str)
+      [(list local-part domain)
+       (unless (ascii-string? local-part)
+         (raise-arguments-error 'email-address->ascii "local part may only contain ASCII characters"
+                                "local part" local-part "in" str))
+       (string-append local-part "@"
+                      (if (ascii-string? domain) domain (convert-domain 'email-address->ascii domain)))]
+      [_ str]))
+  (match (email-address-problem converted)
+    [#f converted]
+    [(list noun has-problem bad)
+     (raise-arguments-error 'email-address->ascii (format "~a ~a" noun has-problem) noun bad "in" str)]))
+
 
 
 ;; ~~ URL Validation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -122,12 +193,14 @@
 ;; This library counts a URL as “valid” only if it includes a valid scheme
 ;; AND the host is a valid RFC 1035 domain.
 (define-explained-contract (valid-url-string? val)
-  "a URL that includes a valid scheme and a valid RFC 1035 domain as the host"
-  (with-handlers ([url-exception? (lambda (e) #f)]) ; catch exns caused by “invalid scheme”
-    (let ([u (string->url val)])
-      (and (url-scheme u)
-           (dns-domain? (url-host u))
-           #t))))
+  "an ASCII URL that includes a valid scheme and a valid RFC 1035 domain as the host (see url-string->ascii for internationalized URLs)"
+  (and (string? val)
+       (ascii-string? val)
+       (with-handlers ([url-exception? (lambda (e) #f)]) ; catch exns caused by “invalid scheme”
+         (let ([u (string->url val)])
+           (and (url-scheme u)
+                (dns-domain? (url-host u))
+                #t)))))
 
 ;; Convenience: "https://www.example.com/path" → "www.example.com"
 (define (url-domain url-str)
@@ -137,6 +210,36 @@
 (define (url-join url-str rp)
   (define rel-path (relative-path->relative-url-string rp))
   (url->string (combine-url/relative (string->url url-str) rel-path)))
+
+(define (percent-encode-non-ascii str)
+  (string-append*
+   (for/list ([c (in-string str)])
+     (if (char<? c #\u80)
+         (string c)
+         (string-append*
+          (for/list ([b (in-bytes (string->bytes/utf-8 (string c)))])
+            (format "%~a" (string-upcase (number->string b 16)))))))))
+
+(define (url-string->ascii str)
+  (match-define (list _ scheme authority path query fragment)
+    (regexp-match #px"^([^:/?#]+:)?(//[^/?#]*)?([^?#]*)(\\?[^#]*)?(#.*)?$" str))
+  (define ascii-authority
+    (and authority
+         (match-let ([(list _ userinfo host port)
+                      (regexp-match #px"^//([^@]*@)?(\\[[^\\]]*\\]|[^:]*)(.*)$" authority)])
+           (string-append "//"
+                          (percent-encode-non-ascii (or userinfo ""))
+                          (if (ascii-string? host) host (convert-domain 'url-string->ascii host))
+                          port))))
+  (define result
+    (string-append (or scheme "")
+                   (or ascii-authority "")
+                   (percent-encode-non-ascii path)
+                   (percent-encode-non-ascii (or query ""))
+                   (percent-encode-non-ascii (or fragment ""))))
+  (unless (valid-url-string? result)
+    (raise-argument-error 'url-string->ascii "URL with a scheme and a domain name as its host" str))
+  result)
 
 ;; ~~ Tag URIs (RFC 4151) ~~~~~~~~~~~~~~~~~~~~~~~~
 ;;

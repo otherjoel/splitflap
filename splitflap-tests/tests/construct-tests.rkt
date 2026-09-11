@@ -125,6 +125,71 @@
 (check-exn exn:fail:contract? (lambda () (url-join "x" "x"))) ; invalid URL string
 (check-exn exn:fail:contract? (lambda () (url-join "http://example.com" abs-path))) ; no absolute paths
 
+;; ~~ Internationalized domain names ~~~~~~~~~~~~~
+
+(check-equal? (domain->ascii "bücher.example") "xn--bcher-kva.example")
+(check-equal? (domain->ascii "faß.de") "xn--fa-hia.de")
+(check-equal? (domain->ascii "例え.テスト") "xn--r8jz45g.xn--zckzah")
+(check-equal? (domain->ascii "مثال.إختبار") "xn--mgbh0fb.xn--kgbechtv")
+(check-equal? (domain->ascii "EXAMPLE.com") "EXAMPLE.com")
+(check-equal? (domain->ascii "XN--BCHER-KVA.example") "XN--BCHER-KVA.example")
+
+(for ([valid (in-list '("\u0915\u094D\u200D\u0937.example"
+                        "\u0646\u0627\u0645\u0647\u200C\u0627\u06CC.example"
+                        "col\u00B7legi.example"
+                        "\u30A2\u30FB\u30A4.example"
+                        "\u03B1\u0375\u03B2.example"
+                        "\u05D0\u05F3.example"))])
+  (check-not-exn (λ () (domain->ascii valid)) valid))
+
+(for ([invalid (in-list '(""
+                          "bücher..example"
+                          "Bücher.example"
+                          "bu\u0308cher.example"
+                          "-bücher.example"
+                          "bü--cher.example"
+                          "\u0301bücher.example"
+                          "a\u200Cb.example"
+                          "a\u00B7b.example"
+                          "a\u30FBb.example"
+                          "\u0660\u06F0.example"
+                          "\U10E80.example"
+                          "مثال.1example"
+                          "xn--zzzzzzzz.example"
+                          "ab--cd.example"))])
+  (check-exn exn:fail:contract? (λ () (domain->ascii invalid)) invalid))
+
+(check-exn #rx"suggestion: \"bücher.example\"" (λ () (domain->ascii "Bücher.example")))
+(check-exn #rx"suggestion: \"例え.テスト\"" (λ () (domain->ascii "例え。テスト")))
+
+(check-true (dns-domain? "xn--bcher-kva.example"))
+(check-false (dns-domain? "bücher.example"))
+(check-false (dns-domain? "xn--zzzzzzzz.example"))
+(check-false (dns-domain? "ab--cd.example"))
+(check-false (dns-domain? "xn--mgbh0fb.1example"))
+
+(check-equal? (url-string->ascii "https://bücher.example/straße?q=ü#ß")
+              "https://xn--bcher-kva.example/stra%C3%9Fe?q=%C3%BC#%C3%9F")
+(check-equal? (url-string->ascii "https://user:pä@bücher.example:8080/")
+              "https://user:p%C3%A4@xn--bcher-kva.example:8080/")
+(for ([url (in-list '("https://example.com/?q=a+b&c=%20"
+                      "file://C:\\home\\user?q=me"
+                      "https://user:p@example.com:8080"))])
+  (check-equal? (url-string->ascii url) url))
+(check-exn exn:fail:contract? (λ () (url-string->ascii "news:comp.servers.unix")))
+(check-exn exn:fail:contract? (λ () (url-string->ascii "https://Bücher.example/")))
+(check-false (valid-url-string? "https://example.com/café"))
+(check-false (valid-url-string? "https://bücher.example/"))
+
+(check-equal? (email-address->ascii "marian@bücher.example") "marian@xn--bcher-kva.example")
+(check-equal? (email-address->ascii "marian@example.com") "marian@example.com")
+(check-exn exn:fail:contract? (λ () (email-address->ascii "marían@example.com")))
+(check-exn exn:fail:contract? (λ () (email-address->ascii "marian@Bücher.example")))
+(check-false (email-address? "marian@bücher.example"))
+
+(check-equal? (tag-uri->string (mint-tag-uri (domain->ascii "bücher.example") "2024" "blog"))
+              "tag:xn--bcher-kva.example,2024:blog")
+
 ;; ~~ Tag URIs (RFC 4151) ~~~~~~~~~~~~~~~~~~~~~~~~
 (check-true (tag-specific-string? "abcdefghijklmnopqrstuvwxyz0123456789"))
 (check-true (tag-specific-string? "ABCDEFGHIJKLMNOPQRSTUVWXYZ"))

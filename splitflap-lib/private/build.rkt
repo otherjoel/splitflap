@@ -61,4 +61,53 @@
   (with-output-to-file mime-types.rktd #:exists 'replace
     (lambda () (write extensions-table))))
 
+(define-runtime-path idna-tables.rktd "./idna-tables.rktd")
+
+;; Download IANA’s IDNA2008 derived property table, plus the Unicode data needed by the
+;; contextual rules (RFC 5892) and the Bidi rule (RFC 5893), all for one Unicode version.
+;; Commented out to emphasize that this should only be run manually.
+#;(define (download-idna-tables [unicode-version "12.0.0"])
+  (define (fetch url)
+    (port->lines (get-pure-port (string->url url))))
+  (define (ucd-file name)
+    (fetch (format "https://www.unicode.org/Public/~a/ucd/~a" unicode-version name)))
+  (define (parse-ranges lines rx keep)
+    (sort (filter-map (λ (line)
+                        (match (regexp-match rx line)
+                          [(list _ start end value)
+                           (define v (keep value))
+                           (define s (string->number start 16))
+                           (and v (vector s (if end (string->number end 16) s) v))]
+                          [#f #f]))
+                      lines)
+          < #:key (λ (r) (vector-ref r 0))))
+  (define (merge ranges)
+    (reverse
+     (for/fold ([acc '()]) ([r (in-list ranges)])
+       (match* (acc r)
+         [((cons (vector s e v) more) (vector s2 e2 v2))
+          #:when (and (equal? v v2) (= s2 (add1 e)))
+          (cons (vector s e2 v) more)]
+         [(_ _) (cons r acc)]))))
+  (define (table lines rx keep)
+    (list->vector (merge (parse-ranges lines rx keep))))
+  (define ucd-rx #px"^([0-9A-F]+)(?:\\.\\.([0-9A-F]+))?\\s*;\\s*([^\\s#]+)")
+  (define iana-rx #px"^([0-9A-F]+)(?:-([0-9A-F]+))?,([A-Z]+),")
+  (define ((one-of . names) v) (and (member v names) (string->symbol v)))
+  (define tables
+    (hasheq 'unicode-version unicode-version
+            'properties (table (fetch (format "https://www.iana.org/assignments/idna-tables-~a/idna-tables-properties.csv"
+                                              unicode-version))
+                               iana-rx
+                               (one-of "PVALID" "CONTEXTJ" "CONTEXTO" "UNASSIGNED"))
+            'bidi (table (ucd-file "extracted/DerivedBidiClass.txt") ucd-rx
+                         (λ (v) (and (not (equal? v "L")) (string->symbol v))))
+            'joining (table (ucd-file "extracted/DerivedJoiningType.txt") ucd-rx (one-of "D" "L" "R" "T"))
+            'virama (table (ucd-file "extracted/DerivedCombiningClass.txt") ucd-rx
+                           (λ (v) (and (equal? v "9") 'virama)))
+            'scripts (table (ucd-file "Scripts.txt") ucd-rx
+                            (one-of "Greek" "Hebrew" "Hiragana" "Katakana" "Han"))))
+  (with-output-to-file idna-tables.rktd #:exists 'replace
+    (lambda () (write tables))))
+
 (module+ test)

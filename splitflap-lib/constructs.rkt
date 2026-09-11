@@ -15,7 +15,10 @@
 
          (contract-out
           [url-domain (-> valid-url-string? dns-domain?)]
-          [url-join (-> valid-url-string? relative-path? valid-url-string?)])
+          [url-join (-> valid-url-string? relative-path? valid-url-string?)]
+          [domain->ascii (-> string? dns-domain?)]
+          [url-string->ascii (-> string? valid-url-string?)]
+          [email-address->ascii (-> string? email-address?)])
          
          ; Tag URIs:
          tag-authority?
