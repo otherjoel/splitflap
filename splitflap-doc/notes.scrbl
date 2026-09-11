@@ -48,6 +48,9 @@ positions to be valid A-labels, and @racket[valid-url-string?] now rejects URLs 
 non-ASCII characters. The IDNA code and tables are loaded only when a domain name contains a
 non-ASCII or @litchar{xn--} label.}
 
+@item{The MIME type table (@racket[mime-types-by-ext]) is now loaded the first time it is used,
+rather than whenever Splitflap is loaded.}
+
 ]
 
 @subsection{Version 1.3}

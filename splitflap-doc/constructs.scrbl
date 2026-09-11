@@ -326,7 +326,8 @@ A hash table mapping file extensions (in lowercase symbol form) to MIME types.
           (hash-ref mime-types-by-ext 'epub)]
 
 @history[#:changed "1.3" @elem{Now a plain hash rather than a
- @tech[#:doc '(lib "scribblings/reference/reference.scrbl")]{promise}.}]
+ @tech[#:doc '(lib "scribblings/reference/reference.scrbl")]{promise}.}
+         #:changed "1.4" @elem{The table is loaded the first time it is used.}]
 
 }
 

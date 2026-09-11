@@ -265,6 +265,9 @@
 ;; Empty list returned for unknown extensions
 (check-equal? (path/string->mime-type ".asdahsf") #f)
 
+(check-equal? (hash-ref mime-types-by-ext 'epub) "application/epub+zip")
+(check-true (immutable? mime-types-by-ext))
+
 
 
 ;; ~~ Enclosures ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
