@@ -10,14 +10,14 @@
 
 ;; ~~ DNS Domain validation (RFC 1035) ~~~~~~~~~~~
 
-(define longest-valid-label (make-string 62 #\a))
+(define longest-valid-label (make-string 63 #\a))
 (define longest-valid-domain
-  (string-append longest-valid-label ; 63 bytes (including length header)
-                 "." longest-valid-label ; 126
-                 "." longest-valid-label ; 189
-                 "." longest-valid-label ; 252
-                 ".aa"))               ; 255 bytes
-  
+  (string-append longest-valid-label
+                 "." longest-valid-label
+                 "." longest-valid-label
+                 "." (make-string 61 #\a)))
+(check-equal? (string-length longest-valid-domain) 253)
+
 (check-true (dns-domain? "example.com"))
 (check-true (dns-domain? "example.com"))
 (check-true (dns-domain? "ex-ample.com"))
@@ -28,14 +28,20 @@
 (check-true (dns-domain? longest-valid-label))
 (check-true (dns-domain? (string-append longest-valid-label ".com")))
 (check-true (dns-domain? longest-valid-domain))
-  
+(check-true (dns-domain? "12345.b"))
+(check-true (dns-domain? "a.1.b"))
+
+(check-false (dns-domain? ""))
+(check-false (dns-domain? "."))
+(check-false (dns-domain? "example..com"))
 (check-false (dns-domain? " example.com")) ; leading space
 (check-false (dns-domain? "example.com ")) ; trailing space
 (check-false (dns-domain? "ex ample.com")) ; internal space
 (check-false (dns-domain? "example-.com")) ; label ending in hyphen
 (check-false (dns-domain? "example.com-")) ; another
-(check-false (dns-domain? "12345.b"))        ; label starting with number
-(check-false (dns-domain? "a12345.678"))     ; another
+(check-false (dns-domain? "-example.com"))
+(check-false (dns-domain? "a12345.678"))
+(check-false (dns-domain? "192.0.2.16"))
 (check-false (dns-domain? (string-append longest-valid-label "a")))
 (check-false (dns-domain? (string-append longest-valid-domain "a")))
 
@@ -46,7 +52,10 @@
 (check-true (email-address? "id-with-dash@domain.com"))
 (check-true (email-address? "_______@example.com"))
 (check-true (email-address? "#!$%&'*+-/=?^_{}|~@domain.org"))
-(check-true (email-address? "\"email\"@example.com"))
+(check-true (email-address? "a`b@example.com"))
+(check-true (email-address? "ABC@example.com"))
+(check-true (email-address? "test@1.example.com"))
+(check-true (email-address? (string-append (make-string 64 #\a) "@example.com")))
 
 ;; See also the tests for dns-domain? which apply to everything after the @
 (check-false (email-address? "email"))
@@ -57,6 +66,22 @@
 (check-false (email-address? (string-append "test@" longest-valid-domain)))
 (check-false (email-address? "email@123.123.123.123"))
 (check-false (email-address? "email@[123.123.123.123]"))
+(check-false (email-address? "\"email\"@example.com"))
+(check-false (email-address? "a b@example.com"))
+(check-false (email-address? "aλ@example.com"))
+(check-false (email-address? "a‘b@example.com"))
+(check-false (email-address? ".a@example.com"))
+(check-false (email-address? "a.@example.com"))
+(check-false (email-address? "a..b@example.com"))
+(check-false (email-address? "a@b@example.com"))
+(check-false (email-address? (string-append (make-string 65 #\a) "@example.com")))
+
+(for ([addr (in-list '("Joel@example.com" "a`b@example.com" "a..b@example.com" "a‘b@example.com"
+                       "a b@example.com" "a@b@example.com" "@example.com" "email@123.123.123.123"))])
+  (check-equal? (with-handlers ([exn:fail:contract? (λ (e) #f)])
+                  (equal? addr (validate-email-address addr)))
+                (email-address? addr)
+                addr))
 
 ;; ~~ URL Validation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 (check-true (valid-url-string? "https://example.com"))
@@ -65,10 +90,13 @@
 (check-true (valid-url-string? "https://user:p@example.com")) ; includes user/password
 (check-true (valid-url-string? "https://example.com:8080"))   ; includes port
 (check-true (valid-url-string? "file://C:\\home\\user?q=me"))   ; OK whatever
+(check-true (valid-url-string? "https://1.example.com"))
 
 ;; Things that are valid URIs but not valid URLs
 (check-false (valid-url-string? "news:comp.servers.unix")) ; no host given, only path
 (check-false (valid-url-string? "http://ex ample.com"))  ; domain not RFC 1035 compliant
+(check-false (valid-url-string? "https://"))
+(check-false (valid-url-string? "https:///path"))
 
 ;; Things that are actually valid URLs but I say nuh-uh, not for using in feeds
 (check-false (valid-url-string? "ldap://[2001:db8::7]/c=GB?objectClass?one"))
@@ -112,6 +140,16 @@
 (check-false (tag-specific-string? invalid-specific))
 (check-true (tag-specific-string? (normalize-tag-specific invalid-specific)))
 
+(check-true (tag-authority? "example.com"))
+(check-true (tag-authority? "1.example.com"))
+(check-true (tag-authority? "kate.p_1-x@example.com"))
+(check-false (tag-authority? ""))
+(check-false (tag-authority? "Example.com"))
+(check-false (tag-authority? "Kate@example.com"))
+(check-false (tag-authority? "kate+feeds@example.com"))
+(check-false (tag-authority? "kate@Example.com"))
+(check-exn exn:fail:contract? (λ () (mint-tag-uri "Example.com" "2005" "main")))
+
 ;; RFC 4151 section 2.4 — Equality of tags:
 ;; “Tags are simply strings of characters and are considered equal if and
 ;;  only if they are completely indistinguishable in their machine
@@ -123,11 +161,11 @@
 (check-true (tag=? (mint-tag-uri "example.com" "2005" "main")
                    (mint-tag-uri "example.com" "2005" "main")))
 ;; Comparison is case-sensitive?
-(check-false (tag=? (mint-tag-uri "Example.com" "2005" "main")
+(check-false (tag=? (mint-tag-uri "example.com" "2005" "Main")
                     (mint-tag-uri "example.com" "2005" "main")))
 ;; Date equivalency doesn’t count
-(check-false (tag=? (mint-tag-uri "Example.com" "2005-01" "main")
-                    (mint-tag-uri "Example.com" "2005-01-01" "main")))
+(check-false (tag=? (mint-tag-uri "example.com" "2005-01" "main")
+                    (mint-tag-uri "example.com" "2005-01-01" "main")))
 
 
 ;; ~~ Dates ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

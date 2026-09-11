@@ -18,11 +18,12 @@
           [url-join (-> valid-url-string? relative-path? valid-url-string?)])
          
          ; Tag URIs:
+         tag-authority?
          tag-entity-date?
          tag-uri?
          tag-specific-string?
          (contract-out
-          [mint-tag-uri (-> (or/c dns-domain? email-address?) tag-entity-date? tag-specific-string? tag-uri?)]
+          [mint-tag-uri (-> tag-authority? tag-entity-date? tag-specific-string? tag-uri?)]
           [append-specific (-> tag-uri? tag-specific-string? tag-uri?)]
           [tag-uri->string (->* (tag-uri?) (#:specific tag-specific-string?) string?)]
           [tag=? (-> tag-uri? tag-uri? boolean?)]

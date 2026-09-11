@@ -53,13 +53,16 @@ particular resource (e.g., a page or file) within the tagging entity.
 The tag URI scheme is formalized in @hyperlink["https://datatracker.ietf.org/doc/html/rfc4151"]{RFC
 4151}.
 
-@defproc[(mint-tag-uri [authority (or/c dns-domain? email-address?)]
+@defproc[(mint-tag-uri [authority tag-authority?]
                        [date tag-entity-date?]
                        [specific tag-specific-string?])
          tag-uri?]{
 
 Returns a @tech{tag URI} struct for use as a unique identifier in a @racket[feed-item],
 @racket[feed], @racket[@episode] or @racket[podcast].
+
+The @racket[_authority] must be a domain name or email address in lowercase. (See
+@racket[tag-authority?].)
 
 The @racket[_date] must be any date on which you had ownership or assignment of the domain or
 email address at 00:00 UTC (the start of the day). (See @racket[tag-entity-date?].)
@@ -71,6 +74,8 @@ characters are allowed here.
 @examples[#:eval mod-constructs
           (mint-tag-uri "rclib.example.com" "2012-04-01" "Marian'sBlog")
           (mint-tag-uri "diveintomark.example.com" "2003" "3.2397")]
+
+@history[#:changed "1.4" @elem{The @racket[_authority] must now satisfy @racket[tag-authority?].}]
 
 }
 
@@ -105,6 +110,31 @@ when their byte-strings are indistinguishable.}
 
 Returns @racket[#t] if the @racket[tag-uri->string] representation of @racket[_tag1] and
 @racket[_tag2] are @racket[equal?], @racket[#f] otherwise.
+
+}
+
+@defproc[(tag-authority? [v any/c]) boolean?]{
+
+Returns @racket[#t] if @racket[_v] can be used as the @tech{authority} in a @tech{tag URI}: a
+@racket[dns-domain?] or @racket[email-address?] that also meets these conditions:
+
+@itemlist[
+
+@item{It contains no uppercase letters. RFC 4151 recommends lowercase, and the @W3CFeedValidator[]
+rejects tag URIs that do not follow this recommendation.}
+
+@item{If it is an email address, the part before the @litchar{@"@"} includes only @litchar{a–z},
+@litchar{0–9}, or characters in the set @litchar{-._}, as RFC 4151 requires.}
+
+]
+
+@examples[#:eval mod-constructs
+          (tag-authority? "rclib.example.com")
+          (tag-authority? "marian@rclib.example.com")
+          (tag-authority? "RCLib.example.com")
+          (tag-authority? "marian+blog@rclib.example.com")]
+
+@history[#:added "1.4"]
 
 }
 
@@ -317,7 +347,8 @@ in @racket[mime-types-by-ext], @racket[#f] otherwise. This function does not acc
 @defproc[(dns-domain? [v any/c]) boolean?]{
 
 Returns @racket[#t] if @racket[_v] is a string whose entire contents are a valid DNS domain
-according to @hyperlink["https://datatracker.ietf.org/doc/html/rfc1035"]{RFC 1035}:
+according to @hyperlink["https://datatracker.ietf.org/doc/html/rfc1035"]{RFC 1035}, as updated by
+@hyperlink["https://datatracker.ietf.org/doc/html/rfc1123#section-2.1"]{RFC 1123}:
 
 @itemlist[
 
@@ -326,10 +357,15 @@ according to @hyperlink["https://datatracker.ietf.org/doc/html/rfc1035"]{RFC 103
 @item{Each label must consist of only the characters @litchar{A–Z}, @litchar{a–z}, @litchar{0–9}, or
 @litchar{-}.}
 
-@item{Labels may not start with a digit or a hyphen, and may not end in a hyphen.}
+@item{Labels may not start or end with a hyphen.}
 
-@item{No individual label may be longer than 63 bytes (including an extra byte for a length header),
-and the entire domain may not be longer than 255 bytes.}
+@item{The last label may not consist entirely of digits (see
+@hyperlink["https://datatracker.ietf.org/doc/html/rfc3696#section-2"]{RFC 3696}), so IPv4 addresses
+never qualify.}
+
+@item{No individual label may be longer than 63 bytes, and the entire domain may not be longer than
+253 bytes. (RFC 1035 sets the limit at 255 bytes, but that count includes a length byte before each
+label and a zero byte for the root label.)}
 
 ]
 
@@ -338,19 +374,24 @@ and the entire domain may not be longer than 255 bytes.}
           (dns-domain? "rclib.org")
           (dns-domain? "a.b.c.d.e-f")
           (dns-domain? "a.b1000.com")
+          (dns-domain? "1.example.com")
+          (dns-domain? "192.0.2.16")
           code:blank
-          (define longest-valid-label (make-string 62 #\a))
+          (define longest-valid-label (make-string 63 #\a))
           (define longest-valid-domain
-            (string-append longest-valid-label "." (code:comment @#,elem{63 bytes (including length header)})
-                           longest-valid-label "." (code:comment @#,elem{126})
-                           longest-valid-label "." (code:comment @#,elem{189})
-                           longest-valid-label "." (code:comment @#,elem{252})
-                           "aa"))                  (code:comment @#,elem{255 bytes})
+            (string-append longest-valid-label "."
+                           longest-valid-label "."
+                           longest-valid-label "."
+                           (make-string 61 #\a)))
+          (string-length longest-valid-domain)
           code:blank
           (dns-domain? longest-valid-label)
           (dns-domain? longest-valid-domain)
           (dns-domain? (string-append longest-valid-label "a"))
           (dns-domain? (string-append longest-valid-domain "a"))]
+
+@history[#:changed "1.4" @elem{Labels may now start with a digit. The length limits are now 63 bytes
+per label and 253 bytes overall (previously 62 and 254). The empty string no longer qualifies.}]
 }
 
 @defproc[(valid-url-string? [v any/c]) boolean?]{
@@ -374,6 +415,9 @@ address).
           (code:line (code:comment @#,elem{Valid URLs but not allowed by this library for use in feeds}))
           (code:line (valid-url-string? "ldap://[2001:db8::7]/c=GB?objectClass?one") (code:comment @#,elem{Host is not a DNS domain}))
           (code:line (valid-url-string? "telnet://192.0.2.16:80/") (code:comment @#,elem{ditto}))]
+
+@history[#:changed "1.4" @elem{Follows the changes to @racket[dns-domain?]. In particular, URLs with
+an empty host no longer qualify.}]
 
 }
 
@@ -415,26 +459,35 @@ common-sense subset of RFC 5322:
 
 @item{Must be in the format @racketvalfont{@nonterm{local-part}@litchar{@"@"}@nonterm{domain}}}
 
-@item{The @nonterm{local-part} must be no longer than 65 bytes and only include @litchar{a–z},
-@litchar{A–Z}, @litchar{0–9}, or characters in the set @litchar|{!#$%&'*+/=?^_‘{|}~-.}|.}
+@item{The @nonterm{local-part} must be no longer than 64 bytes and only include @litchar{a–z},
+@litchar{A–Z}, @litchar{0–9}, or characters in the set @litchar|{!#$%&'*+/=?^_`{|}~-.}|.}
+
+@item{The @nonterm{local-part} may not start or end with @litchar{.}, and may not contain two
+@litchar{.} characters in a row.}
 
 @item{The @nonterm{domain} must be valid according to @racket[dns-domain?].}
 
-@item{The entire email address must be no longer than 255 bytes.}
+@item{The entire email address must be no longer than 254 bytes.}
 
 ]
 
 @examples[#:eval mod-constructs
           (email-address? "test-email.with+symbol@example.com")
           (email-address? "#!$%&'*+-/=?^_{}|~@example.com")
+          (email-address? "marian..paroo@example.com")
           code:blank
           (code:comment @#,elem{See also dns-domain? which applies to everything after the @"@" sign})
           (email-address? "email@123.123.123.123")
           (email-address? "λ@example.com")]
 
+@history[#:changed "1.4" @elem{Fixed a bug that accepted any local part containing at least one
+allowed character and rejected local parts with no lowercase letters. The allowed characters now
+include @litchar{`} (as in RFC 5322) instead of @litchar{‘}. Local parts may no longer start or end
+with a period or contain two periods in a row.}]
+
 }
 
-@defproc[(validate-email-address [addr string?]) boolean?]{
+@defproc[(validate-email-address [addr string?]) string?]{
 
 Returns @racket[_addr] if it is a valid email address (according to the same rules as for
 @racket[email-address?]); otherwise, an exception is raised whose message explains the reason the
@@ -445,8 +498,12 @@ address is invalid.
              (validate-email-address "@")
              (validate-email-address "me@myself@example.com")
              (validate-email-address ".marian@rclib.example.com")
+             (validate-email-address "marian..paroo@rclib.example.com")
              (validate-email-address "λ@example.com")
-             (validate-email-address "lambda@1.example.com")]
+             (validate-email-address "lambda@example..com")]
+
+@history[#:changed "1.4" @elem{Now accepts and rejects exactly the same addresses as
+@racket[email-address?]. Previously it rejected local parts containing uppercase letters.}]
 
 }
 
