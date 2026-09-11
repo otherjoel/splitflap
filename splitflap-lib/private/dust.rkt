@@ -164,3 +164,8 @@
 (define-syntax (if/sp stx)
   (syntax-case stx ()
     [(_ check val) #'(if check (list val) '())]))
+
+(define (ascii-string? str)
+  (for/and ([c (in-string str)]) (char<? c #\u80)))
+
+(struct domain-problem (message details))
