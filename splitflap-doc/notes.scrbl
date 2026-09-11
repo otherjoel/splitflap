@@ -25,7 +25,7 @@ requires email addresses to conform to RFC 2822, which allows only ASCII.
 
 @subsection{Version 1.4}
 
-@itemlist[#:style 'compact
+@itemlist[
 
 @item{@racket[dns-domain?] now allows labels that start with a digit (per RFC 1123) and labels of up
 to 63 bytes; limits domains to 253 bytes; and no longer accepts the empty string. As a result,
@@ -42,11 +42,14 @@ allows only @litchar{a–z}, @litchar{0–9}, @litchar{-}, @litchar{.} and @litc
 tag URIs use other authorities.}
 
 @item{Added @racket[domain->ascii], @racket[url-string->ascii] and @racket[email-address->ascii],
-which convert internationalized domain names and URLs to ASCII according to IDNA2008 (see
-@secref["idn"]). @racket[dns-domain?] now requires labels with @litchar{--} in the third and fourth
-positions to be valid A-labels, and @racket[valid-url-string?] now rejects URLs that contain
-non-ASCII characters. The IDNA code and tables are loaded only when a domain name contains a
-non-ASCII or @litchar{xn--} label.}
+which convert internationalized domain names to ASCII according to IDNA2008 (see @secref["idn"]).
+@racket[url-string->ascii] also percent-encodes any other non-ASCII characters, following RFC 3987.
+@racket[email-address->ascii] converts only the domain, because a non-ASCII local part has no ASCII
+form.}
+
+@item{@racket[dns-domain?] now requires labels with @litchar{--} in the third and fourth positions
+to be valid A-labels, and @racket[valid-url-string?] now rejects URLs that contain non-ASCII
+characters.}
 
 @item{The MIME type table (@racket[mime-types-by-ext]) is now loaded the first time it is used,
 rather than whenever Splitflap is loaded.}
