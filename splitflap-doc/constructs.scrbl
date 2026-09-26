@@ -237,25 +237,37 @@ bit more ergonomic.
 @defproc[(infer-moment [str string? ""]) moment?]{
 
 Parses from @racket[_str] and returns a precise @racket[moment], inferring time information where
-ommitted and using @racket[current-timezone] as the time zone for the moment.
+ommitted.
 
 If @racket[_str] is @racketvalfont{""}, then the result of @racket[now/moment] is returned.
-Otherwise @racket[_str] must be in the form @racket{YYYY-MM-DD [hh:mm[:ss]]} or an exception is
-raised. If the seconds are ommitted, @racketvalfont{00} is assumed, and if the hours and minutes are
-ommitted, @racketvalfont{00:00:00} (the very start of the date) is assumed.
+Otherwise @racket[_str] must be in the form
+@tt{@racketvarfont{YYYY}@litchar{-}@racketvarfont{MM}@litchar{-}@racketvarfont{DD}[ |@litchar{T}]@racketvarfont{hh}[@litchar{:}@racketvarfont{mm}[@litchar{:}@racketvarfont{ss}[@litchar{.}@racketvarfont{s}]]][@nonterm{offset}]]} or an
+exception is raised. Omitted minutes and seconds are assumed to be @racketvalfont{00}, and if the time
+is omitted entirely, @racketvalfont{00:00:00} (the very start of the date) is assumed. Fractional
+seconds may have up to nine digits.
+
+The optional @nonterm{offset} is either @litchar{Z} (for UTC) or @litchar{+hh:mm} or
+@litchar{-hh:mm}, and determines the time zone of the result. If the offset is omitted,
+@racket[current-timezone] is used.
 
 @examples[#:eval mod-constructs
           (infer-moment "2012-08-31")
           (infer-moment "2012-08-31 13:34")
           (infer-moment "2015-10-02 01:03:15")
+          (infer-moment "2015-10-02T01:03:15.5")
 
           (parameterize ([current-timezone -14400])
             (infer-moment "2015-10-02 01:03:15"))
 
+          (infer-moment "2015-10-02T01:03:15Z")
+          (infer-moment "2015-10-02T01:03:15-04:00")
+
           (infer-moment "2012-09-14 12")
           (infer-moment)]
 
-@history[#:changed "1.2" "Added no-argument form for current moment"]
+@history[#:changed "1.2" "Added no-argument form for current moment"
+         #:changed "1.4.1" @elem{Added the @litchar{T} separator, fractional seconds, UTC offsets and
+                              hours without minutes; trailing characters now raise an exception}]
 
 }
 

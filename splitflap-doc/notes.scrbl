@@ -23,6 +23,18 @@ requires email addresses to conform to RFC 2822, which allows only ASCII.
 
 @section{Version History}
 
+@subsection{Version 1.4.1}
+
+@itemlist[
+
+@item{@racket[infer-moment] now accepts @litchar{T} between the date and time, an hour without
+minutes, fractional seconds, and a UTC offset (@litchar{Z} or @litchar{±hh:mm}). Previously it
+ignored anything it could not parse after the date: @racket{2012-09-14 12} and
+@racket{2012-09-14T10:30} were both read as midnight. It now reads these as 12:00 and 10:30, and
+raises an exception for strings with trailing characters.}
+
+]
+
 @subsection{Version 1.4}
 
 @itemlist[
