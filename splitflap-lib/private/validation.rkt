@@ -333,14 +333,26 @@
 (define (n: v) (cond [(not v) 0] [(string? v) (string->number v)] [else v]))
 
 (define date/time-regex
-  #px"^([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])(?:\\s+([01]?[0-9]|2[0-3]):([0-5][0-9])(?::([0-5][0-9]|60))?)?")
+  (pregexp (string-append "^([0-9]+)-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])"
+                          "(?:(?:T|\\s+)([01]?[0-9]|2[0-3])(?::([0-5][0-9])"
+                          "(?::([0-5][0-9]|60)(?:\\.([0-9]{1,9}))?)?)?"
+                          "(Z|([+-])([01][0-9]|2[0-3]):([0-5][0-9]))?)?$")))
+
+(define (fraction->nanoseconds f)
+  (if f (* (string->number f) (expt 10 (- 9 (string-length f)))) 0))
+
+(define (utc-offset zone sign hr min)
+  (cond [(not zone) (current-timezone)]
+        [(equal? zone "Z") 0]
+        [else ((if (equal? sign "-") - +) (+ (* 3600 (n: hr)) (* 60 (n: min))))]))
 
 (define (infer-moment [str ""])
   (match str
     ["" (now/moment)]
-    [(pregexp date/time-regex (list _ y m d hr min sec))
-     (moment (n: y) (n: m) (n: d) (n: hr) (n: min) (n: sec) 0)]
-    [_ (raise-argument-error 'Date "string in the format ‘YYYY-MM-DD [hh:mm[:ss]]’" str)]))
+    [(pregexp date/time-regex (list _ y m d hr min sec frac zone sign zhr zmin))
+     (moment (n: y) (n: m) (n: d) (n: hr) (n: min) (n: sec) (fraction->nanoseconds frac)
+             #:tz (utc-offset zone sign zhr zmin))]
+    [_ (raise-argument-error 'Date "string in the format ‘YYYY-MM-DD[(T| )hh[:mm[:ss[.s]]][Z|±hh:mm]]’" str)]))
 
 (define (moment->string m type)
   (~t m (case type

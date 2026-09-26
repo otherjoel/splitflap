@@ -238,6 +238,31 @@
 (check-equal? (infer-moment "2022-04-08")
               (moment 2022 4 8))
 (check-exn exn:fail:contract? (lambda () (infer-moment "2022")))
+(check-equal? (infer-moment "2022-04-08 13:34")
+              (moment 2022 4 8 13 34))
+(check-equal? (infer-moment "2022-04-08T13:34")
+              (moment 2022 4 8 13 34))
+(check-equal? (infer-moment "2022-04-08T13:34:15")
+              (moment 2022 4 8 13 34 15))
+(check-equal? (infer-moment "2022-04-08T13:34:15.25")
+              (moment 2022 4 8 13 34 15 250000000))
+(check-equal? (infer-moment "2022-04-08T13:34:15Z")
+              (moment 2022 4 8 13 34 15 #:tz 0))
+(check-equal? (infer-moment "2022-04-08 13:34-05:00")
+              (moment 2022 4 8 13 34 #:tz -18000))
+(check-equal? (infer-moment "2022-04-08T13:34:15.5+05:30")
+              (moment 2022 4 8 13 34 15 500000000 #:tz 19800))
+(check-equal? (infer-moment "2022-04-08 12")
+              (moment 2022 4 8 12))
+(check-equal? (infer-moment "2022-04-08T12Z")
+              (moment 2022 4 8 12 #:tz 0))
+(for ([bad (in-list '("2022-04-08T12:"
+                      "2022-04-08T"
+                      "2022-04-08 13:34 extra"
+                      "2022-04-08Z"
+                      "2022-04-08T13:34+5"
+                      "2022-04-08T13:34:15."))])
+  (check-exn exn:fail:contract? (lambda () (infer-moment bad)) bad))
 
 
 ;; ~~ Persons ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

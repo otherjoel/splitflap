@@ -1,7 +1,7 @@
 #lang info
 
 (define collection "splitflap")
-(define version "1.4")
+(define version "1.4.1")
 
 (define deps '(["base" #:version "8.1"]
                "gregor-lib"))
